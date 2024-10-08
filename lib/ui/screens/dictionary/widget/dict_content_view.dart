@@ -751,7 +751,10 @@ class DictionaryContentView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Frequency Data for ${freq.headword} (CST)"),
+        title: Text(
+          "Frequency data for:\n ${freq.headword} (CST)",
+          textAlign: TextAlign.center, // This will center the text
+        ),
         contentPadding: isMobile ? EdgeInsets.zero : null,
         insetPadding: isMobile ? const EdgeInsets.all(insetPadding) : null,
         content: content,
@@ -795,26 +798,22 @@ class DictionaryContentView extends StatelessWidget {
 
     // Add the header row with consistent number of columns
     rows.add(
-      TableRow(
+      const TableRow(
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(8.0),
             child:
                 Text("Section", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(8.0),
             child: Text("Subsection",
                 style: TextStyle(fontWeight: FontWeight.bold)),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(8.0),
             child: Text("Frequency",
                 style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text("Grade", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -872,11 +871,11 @@ class DictionaryContentView extends StatelessWidget {
         String subsectionName = subsections[i];
         int index = indices[i];
 
-        // Get frequency and grade data, handle if index is out of range
+        // Get frequency data, handle if index is out of range
         String freq =
             index < cstFreq.length ? cstFreq[index]?.toString() ?? '-' : '-';
-        String grad =
-            index < cstGrad.length ? cstGrad[index]?.toString() ?? '-' : '-';
+        // Get grade data and use it to set background color
+        int grade = index < cstGrad.length ? cstGrad[index] ?? 0 : 0;
 
         rows.add(
           TableRow(
@@ -891,11 +890,11 @@ class DictionaryContentView extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(freq),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(grad),
+                // Use grade to set background color
+                child: Container(
+                  color: _getGradeColor(grade),
+                  child: Text(freq),
+                ),
               ),
             ],
           ),
@@ -913,6 +912,19 @@ class DictionaryContentView extends StatelessWidget {
       defaultColumnWidth: const IntrinsicColumnWidth(),
       children: rows,
     );
+  }
+
+// Helper function to map grade to color
+  Color _getGradeColor(int grade) {
+    // You can modify the color logic based on your requirements
+    if (grade == 0) return Colors.white;
+    if (grade == 1) return Colors.lightBlue[50]!;
+    if (grade == 2) return Colors.lightBlue[100]!;
+    if (grade == 3) return Colors.lightBlue[200]!;
+    if (grade == 4) return Colors.lightBlue[300]!;
+    if (grade == 5) return Colors.lightBlue[400]!;
+    // Add more ranges if necessary
+    return Colors.lightBlue[500]!;
   }
 
 // Helper function to build each section row with data
