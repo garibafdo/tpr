@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:substring_highlight/substring_highlight.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
-import 'package:tipitaka_pali/ui/widgets/pali_text_view.dart';
 import 'package:tipitaka_pali/utils/font_utils.dart';
 import 'package:tipitaka_pali/utils/pali_script_converter.dart';
 import 'toc.dart';

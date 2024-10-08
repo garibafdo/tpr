@@ -63,19 +63,18 @@ class SearchFilterView extends StatelessWidget {
 
   Widget _buildMainCategoryFilter(SearchFilterController notifier) {
     //print('building main filter');
-    final _mainCategoryFilters = notifier.mainCategoryFilters;
-    final _selectedMainCategoryFilters = notifier.selectedMainCategoryFilters;
+    final mainCategoryFilters = notifier.mainCategoryFilters;
+    final selectedMainCategoryFilters = notifier.selectedMainCategoryFilters;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Card(
         child: Wrap(
-            children: _mainCategoryFilters.entries
+            children: mainCategoryFilters.entries
                 .map((e) => Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: FilterChip(
                           label: Text(e.value),
-                          selected:
-                              _selectedMainCategoryFilters.contains(e.key),
+                          selected: selectedMainCategoryFilters.contains(e.key),
                           onSelected: (isSelected) {
                             notifier.onMainFilterChange(e.key, isSelected);
                           }),
@@ -86,18 +85,18 @@ class SearchFilterView extends StatelessWidget {
   }
 
   Widget _buildSubCategoryFilters(SearchFilterController notifier) {
-    final _subCategoryFilters = notifier.subCategoryFilters;
-    final _selectedSubCategoryFilters = notifier.selectedSubCategoryFilters;
+    final subCategoryFilters = notifier.subCategoryFilters;
+    final selectedSubCategoryFilters = notifier.selectedSubCategoryFilters;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Card(
         child: Wrap(
-            children: _subCategoryFilters.entries
+            children: subCategoryFilters.entries
                 .map((e) => Padding(
                       padding: const EdgeInsets.all(4.0),
                       child: FilterChip(
                           label: Text(e.value),
-                          selected: _selectedSubCategoryFilters.contains(e.key),
+                          selected: selectedSubCategoryFilters.contains(e.key),
                           onSelected: (isSelected) {
                             notifier.onSubFilterChange(e.key, isSelected);
                           }),

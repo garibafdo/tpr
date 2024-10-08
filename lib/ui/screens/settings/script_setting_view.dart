@@ -45,11 +45,11 @@ class ScriptSettingView extends StatelessWidget {
                     },
                     child: currentScriptLanguage == 'ro'
                         ? Padding(
-                            key: ValueKey('RomanFontSelector'),
+                            key: const ValueKey('RomanFontSelector'),
                             padding: const EdgeInsets.only(left: 32.0),
                             child: _buildRomanFontSelector(context),
                           )
-                        : SizedBox(
+                        : const SizedBox(
                             key: ValueKey('EmptySpace'),
                             height: 0,
                           ),

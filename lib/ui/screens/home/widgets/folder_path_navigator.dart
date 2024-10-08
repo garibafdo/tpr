@@ -22,7 +22,7 @@ class FolderPathNavigator extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Text(folder.name,
-                  style: TextStyle(fontSize: 16, color: Colors.blue)),
+                  style: const TextStyle(fontSize: 16, color: Colors.blue)),
             ),
           );
         }).toList(),

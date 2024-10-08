@@ -183,7 +183,8 @@ class BookmarkAppBar extends StatelessWidget implements PreferredSizeWidget {
         await Share.shareXFiles(
           [XFile(file.path)],
           subject: 'Exported Bookmarks',
-          sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size, // required for ipad
+          sharePositionOrigin:
+              box!.localToGlobal(Offset.zero) & box.size, // required for ipad
         );
       } catch (e) {
         debugPrint('Error sharing file: $e');
@@ -208,7 +209,7 @@ class BookmarkAppBar extends StatelessWidget implements PreferredSizeWidget {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
-                  return BookmarkCloudTransferDialog();
+                  return const BookmarkCloudTransferDialog();
                 },
               ).then((_) => onDialogClose()); // Use the callback here
             })

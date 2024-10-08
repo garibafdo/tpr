@@ -28,7 +28,7 @@ class BookmarkContentTile extends StatelessWidget {
       trailing: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.drive_file_move), // Example icon
+            icon: const Icon(Icons.drive_file_move), // Example icon
             onPressed: () {
               // Your logic to handle the move to folder action
             },
@@ -36,7 +36,7 @@ class BookmarkContentTile extends StatelessWidget {
                 'Move to Folder', // Providing a tooltip can help clarify the action
           ),
           IconButton(
-            icon: Icon(Icons.delete),
+            icon: const Icon(Icons.delete),
             onPressed: onDelete,
           ),
         ],

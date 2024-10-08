@@ -197,7 +197,7 @@ class ReaderViewController extends ChangeNotifier {
 
   Future<void> _loadBookmarks(String bookID) async {
     bookmarks = await bookmarkRepository.getBookmarks(bookID: bookID);
-    print('bookmark count: ${bookmarks.length}');
+    debugPrint('bookmark count: ${bookmarks.length}');
   }
 
   List<Bookmark> getBookmarks(int pageNumber) {
