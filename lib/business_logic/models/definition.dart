@@ -8,6 +8,7 @@ class Definition {
   int hasRootFamily;
   int hasCompoundFamily;
   int hasWordFamily;
+  int hasFreq;
 
   Definition({
     this.id = 0,
@@ -19,6 +20,7 @@ class Definition {
     this.hasRootFamily = 0,
     this.hasCompoundFamily = 0,
     this.hasWordFamily = 0,
+    this.hasFreq = 0,
   });
 
   factory Definition.fromJson(Map<dynamic, dynamic> json) {
@@ -32,6 +34,7 @@ class Definition {
       hasRootFamily: json["has_root_family"] ?? 0,
       hasCompoundFamily: json["has_compound_family"] ?? 0,
       hasWordFamily: json["has_word_family"] ?? 0,
+      hasFreq: json["has_freq"] ?? 0,
     );
   }
 
@@ -45,6 +48,7 @@ class Definition {
         "has_root_family": hasRootFamily,
         "has_compound_family": hasCompoundFamily,
         "has_word_family": hasWordFamily,
+        "has_freq": hasFreq,
       };
 
   @override

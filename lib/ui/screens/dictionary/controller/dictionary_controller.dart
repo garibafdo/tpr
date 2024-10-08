@@ -551,19 +551,25 @@ class DictionaryController with ChangeNotifier {
 
   getDpdInflection(int wordId) {
     final dictionaryProvider =
-    DictionarySerice(DictionaryDatabaseRepository(DatabaseHelper()));
+        DictionarySerice(DictionaryDatabaseRepository(DatabaseHelper()));
     return dictionaryProvider.getDpdInflection(wordId);
   }
 
   getDpdRootFamily(int wordId) {
     final dictionaryProvider =
-    DictionarySerice(DictionaryDatabaseRepository(DatabaseHelper()));
+        DictionarySerice(DictionaryDatabaseRepository(DatabaseHelper()));
     return dictionaryProvider.getDpdRootFamily(wordId);
   }
 
   getDpdCompoundFamilies(int wordId) {
     final dictionaryProvider =
-    DictionarySerice(DictionaryDatabaseRepository(DatabaseHelper()));
+        DictionarySerice(DictionaryDatabaseRepository(DatabaseHelper()));
     return dictionaryProvider.getDpdCompoundFamilies(wordId);
+  }
+
+  getDpdFreq(int wordId) {
+    final dictionaryProvider =
+        DictionarySerice(DictionaryDatabaseRepository(DatabaseHelper()));
+    return dictionaryProvider.getFrequencyDataForHeadword(wordId);
   }
 }

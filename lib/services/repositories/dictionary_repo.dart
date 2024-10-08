@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:beautiful_soup_dart/beautiful_soup.dart';
 import 'package:flutter/material.dart';
 import 'package:tipitaka_pali/business_logic/models/definition.dart';
 import 'package:tipitaka_pali/business_logic/models/dictionary.dart';
 import 'package:tipitaka_pali/business_logic/models/dpd_root_family.dart';
+import 'package:tipitaka_pali/business_logic/models/freq.dart';
 import 'package:tipitaka_pali/services/database/database_helper.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
 
@@ -21,6 +24,8 @@ abstract class DictionaryRepository {
   Future<DpdInflection?> getDpdInflection(int wordId);
   Future<DpdRootFamily?> getDpdRootFamily(int wordId);
   Future<List<DpdCompoundFamily>?> getDpdCompoundFamilies(int wordId);
+  Future<Freq?> getFrequencyDataForHeadword(int wordID);
+
   Future<String> getDpdHeadwords(String word);
   Future<String> getDpdLikeHeadwords(String word);
   Future<int> insertOrReplace(DictionaryHistory dictionaryHistory);
@@ -94,7 +99,7 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
     for (var element in words) {
       word = element.trimLeft();
       final sql = '''
-      SELECT dpd.id as id, word, definition, user_order, name, has_inflections, has_root_family, has_compound_family from dpd, dictionary_books
+      SELECT dpd.id as id, word, definition, user_order, name, has_inflections, has_root_family, has_compound_family, has_freq from dpd, dictionary_books
       WHERE word = '$word' AND user_choice =1  AND dictionary_books.id = dpd.book_id
     ''';
       List<Map<String, dynamic>> maps = await db.rawQuery(sql);
@@ -118,6 +123,10 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
 
           if (defs[0].hasCompoundFamily == 1) {
             extras['compound-family'] = 'Samāsas';
+          }
+
+          if (defs[0].hasFreq == 1) {
+            extras['freq'] = 'Frequency';
           }
 
           //final extras = {"inflect": "Inflect", "root-family": "Root Family"};
@@ -318,6 +327,54 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
     }
 
     return null;
+  }
+
+  @override
+  Future<Freq?> getFrequencyDataForHeadword(int id) async {
+    final db = await databaseHelper.database;
+
+    // =========================================================================
+    // Get the headword and frequency data
+    // =========================================================================
+    List<Map<String, dynamic>> wordData = await db.rawQuery('''
+    SELECT 
+      id, headword, freq_data
+    FROM 
+      freq
+    WHERE 
+      id = $id;
+  ''');
+
+    // Check if we got any result
+    if (wordData.isEmpty) {
+      return null;
+    }
+
+    final mappedWord = wordData[0];
+    final headword = mappedWord['headword'];
+    final freqDataJson = mappedWord['freq_data'];
+
+    // =========================================================================
+    // Parse the frequency data (assumes JSON structure in freq_data)
+    // =========================================================================
+    Map<String, dynamic> freqData = {};
+    try {
+      freqData = jsonDecode(freqDataJson);
+    } catch (e) {
+      debugPrint('Error parsing freq_data: $e');
+      return null;
+    }
+
+    // =========================================================================
+    // Map to Freq model
+    // =========================================================================
+    Freq freq = Freq(
+      id: mappedWord['id'] as int,
+      headword: headword,
+      freqData: freqData,
+    );
+
+    return freq; // Return the Freq object
   }
 
   @override

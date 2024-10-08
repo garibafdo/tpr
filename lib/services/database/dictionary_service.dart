@@ -1,5 +1,6 @@
 import 'package:tipitaka_pali/business_logic/models/dpd_compound_family.dart';
 import 'package:tipitaka_pali/business_logic/models/dpd_inflection.dart';
+import 'package:tipitaka_pali/business_logic/models/freq.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
 
 import '../../business_logic/models/definition.dart';
@@ -72,6 +73,10 @@ class DictionarySerice {
 
   Future<DpdRootFamily?> getDpdRootFamily(int wordId) async {
     return dictionaryRepository.getDpdRootFamily(wordId);
+  }
+
+  Future<Freq?> getFrequencyDataForHeadword(int wordId) async {
+    return dictionaryRepository.getFrequencyDataForHeadword(wordId);
   }
 
   Future<String> getDpdHeadwords(String word) async {

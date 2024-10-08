@@ -7,6 +7,7 @@ import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart
 import 'package:provider/provider.dart';
 import 'package:tipitaka_pali/business_logic/models/dpd_inflection.dart';
 import 'package:tipitaka_pali/business_logic/models/dpd_root_family.dart';
+import 'package:tipitaka_pali/business_logic/models/freq.dart';
 import 'package:tipitaka_pali/routes.dart';
 import 'package:tipitaka_pali/services/database/database_helper.dart';
 import 'package:tipitaka_pali/services/provider/theme_change_notifier.dart';
@@ -122,7 +123,8 @@ class DictionaryContentView extends StatelessWidget {
                         final allowedExtras = [
                           'inflect',
                           'root-family',
-                          'compound-family'
+                          'compound-family',
+                          'freq'
                         ];
 
                         if (href.startsWith("dpd://")) {
@@ -235,6 +237,9 @@ class DictionaryContentView extends StatelessWidget {
         break;
       case "compound-family":
         showCompoundFamily(context, wordId);
+        break;
+      case "freq":
+        showFreq(context, wordId);
         break;
     }
   }
@@ -705,6 +710,244 @@ class DictionaryContentView extends StatelessWidget {
         );
       }).toList(),
     );
+  }
+
+  void showFreq(BuildContext context, int wordId) async {
+    var dictionaryController = context.read<DictionaryController>();
+    Freq? freq = await dictionaryController.getDpdFreq(wordId);
+
+    // Prevent using context across async gaps
+    if (!context.mounted) return;
+
+    // Handle case where no frequency data is found
+    if (freq == null) {
+      // Optionally, you can add a dialog to handle cases where frequency data is not found
+      return;
+    }
+
+    debugPrint('Frequency data: $freq');
+
+    // Parse freq_data to extract the CST frequency and grade
+    List<dynamic> cstFreq = freq.freqData['CstFreq'];
+    List<dynamic> cstGrad = freq.freqData['CstGrad'];
+
+    final isMobile = Mobile.isPhone(context);
+    const insetPadding = 10.0;
+
+    // Prepare the content widget with scrollbars
+    final content = isMobile
+        ? SizedBox(
+            width: MediaQuery.of(context).size.width - 2 * insetPadding,
+            child: _getFreqWidget(cstFreq, cstGrad),
+          )
+        : Container(
+            constraints: const BoxConstraints(
+              maxHeight: 400,
+              maxWidth: 800,
+            ),
+            child: _getFreqWidget(cstFreq, cstGrad),
+          );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Frequency Data for ${freq.headword} (CST)"),
+        contentPadding: isMobile ? EdgeInsets.zero : null,
+        insetPadding: isMobile ? const EdgeInsets.all(insetPadding) : null,
+        content: content,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.ok),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Scrollbar _getFreqWidget(List<dynamic> cstFreq, List<dynamic> cstGrad) {
+    final horizontal = ScrollController();
+    final vertical = ScrollController();
+
+    return Scrollbar(
+      controller: vertical,
+      thumbVisibility: true,
+      trackVisibility: true,
+      child: Scrollbar(
+        controller: horizontal,
+        thumbVisibility: true,
+        trackVisibility: true,
+        notificationPredicate: (notification) => notification.depth == 1,
+        child: SingleChildScrollView(
+          controller: vertical,
+          child: SingleChildScrollView(
+            controller: horizontal,
+            scrollDirection: Axis.horizontal,
+            child: _getFreqTable(cstFreq, cstGrad),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Table _getFreqTable(List<dynamic> cstFreq, List<dynamic> cstGrad) {
+    List<TableRow> rows = [];
+
+    // Add the header row with consistent number of columns
+    rows.add(
+      TableRow(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child:
+                Text("Section", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text("Subsection",
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text("Frequency",
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text("Grade", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    // Define the sections and subsections
+    final List<Map<String, dynamic>> sections = [
+      {
+        'name': 'Vinaya',
+        'subsections': [
+          'Pārājika',
+          'Pācittiya',
+          'Mahāvagga',
+          'Cūḷavagga',
+          'Parivāra'
+        ],
+        'freqIndices': [0, 1, 2, 3, 4],
+      },
+      {
+        'name': 'Sutta',
+        'subsections': [
+          'Dīgha',
+          'Majjhima',
+          'Saṃyutta',
+          'Aṅguttara',
+          'Khuddaka 1',
+          'Khuddaka 2',
+          'Khuddaka 3'
+        ],
+        'freqIndices': [5, 6, 7, 8, 9, 10, 11],
+      },
+      {
+        'name': 'Abhidhamma',
+        'subsections': [
+          'Dhammasaṅgaṇī',
+          'Vibhaṅga',
+          'Dhātukathā',
+          'Puggalapaññatti',
+          'Kathāvatthu',
+          'Yamaka',
+          'Paṭṭhāna'
+        ],
+        'freqIndices': [12, 13, 14, 15, 16, 17, 18],
+      },
+    ];
+
+    // Build the table rows
+    for (var section in sections) {
+      String sectionName = section['name'];
+      List<String> subsections = section['subsections'];
+      List<int> indices = section['freqIndices'];
+
+      // For each subsection, create a row
+      for (int i = 0; i < subsections.length; i++) {
+        String subsectionName = subsections[i];
+        int index = indices[i];
+
+        // Get frequency and grade data, handle if index is out of range
+        String freq =
+            index < cstFreq.length ? cstFreq[index]?.toString() ?? '-' : '-';
+        String grad =
+            index < cstGrad.length ? cstGrad[index]?.toString() ?? '-' : '-';
+
+        rows.add(
+          TableRow(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(sectionName),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(subsectionName),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(freq),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(grad),
+              ),
+            ],
+          ),
+        );
+
+        // After the first row of a section, set sectionName to empty to avoid repetition
+        if (sectionName.isNotEmpty) {
+          sectionName = '';
+        }
+      }
+    }
+
+    return Table(
+      border: TableBorder.all(),
+      defaultColumnWidth: const IntrinsicColumnWidth(),
+      children: rows,
+    );
+  }
+
+// Helper function to build each section row with data
+  TableRow _buildSectionRow(String section, List<dynamic> cstFreq,
+      List<dynamic> cstGrad, int start, int end) {
+    List<Widget> cells = [
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(section, style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+    ];
+
+    // Add frequency and grade data for each subsection
+    for (int i = start; i <= end; i++) {
+      // Display empty cell if data is missing
+      cells.add(Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: i < cstFreq.length
+            ? Text(cstFreq[i]?.toString() ?? '-')
+            : Container(), // Handle null cases gracefully
+      ));
+      cells.add(Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: i < cstGrad.length
+            ? Text(cstGrad[i]?.toString() ?? '-')
+            : Container(), // Handle null cases gracefully
+      ));
+    }
+
+    // If fewer columns are provided, pad with empty widgets
+    while (cells.length < 6) {
+      cells.add(SizedBox.shrink());
+    }
+
+    return TableRow(children: cells);
   }
 
   String getLeftCharacters(String text, int offset) {
