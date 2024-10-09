@@ -26,9 +26,40 @@ import '../../../../services/prefs.dart';
 import '../controller/dictionary_controller.dart';
 import '../controller/dictionary_state.dart';
 
+// **1. Define `expectedFrequencies` at the global level**
+const List<Map<String, String>> expectedFrequencies = [
+  {'section': 'Pārājika'},
+  {'section': 'Pācittiya'},
+  {'section': 'Mahāvagga'},
+  {'section': 'Cūḷavagga'},
+  {'section': 'Parivāra'},
+  {'section': 'Dīgha Nikāya'},
+  {'section': 'Majjhima Nikāya'},
+  {'section': 'Saṃyutta Nikāya'},
+  {'section': 'Aṅguttara Nikāya'},
+  {'section': 'Khuddaka Nikāya 1'},
+  {'section': 'Khuddaka Nikāya 2'},
+  {'section': 'Khuddaka Nikāya 3'},
+  {'section': 'Dhammasaṅgaṇī'},
+  {'section': 'Vibhaṅga'},
+  {'section': 'Dhātukathā'},
+  {'section': 'Puggalapaññatti'},
+  {'section': 'Kathāvatthu'},
+  {'section': 'Yamaka'},
+  {'section': 'Paṭṭhāna'},
+  {'section': 'Visuddhimagga'},
+  {'section': 'Leḍī Sayāḍo'},
+  {'section': 'Buddhavandanā'},
+  {'section': 'Vaṃsa'},
+  {'section': 'Byākaraṇa'},
+  {'section': 'Pucchavissajjanā'},
+  {'section': 'Nīti'},
+  {'section': 'Pakiṇṇaka'},
+  {'section': 'Sihaḷa'},
+];
+
 class DictionaryContentView extends StatelessWidget {
   final ScrollController? scrollController;
-
   const DictionaryContentView({super.key, this.scrollController});
 
   @override
@@ -731,21 +762,30 @@ class DictionaryContentView extends StatelessWidget {
     List<dynamic> cstFreq = freq.freqData['CstFreq'];
     List<dynamic> cstGrad = freq.freqData['CstGrad'];
 
-    final isMobile = Mobile.isPhone(context);
+    // **2. Adjust the data arrays using your `addDataPoints` and `makeMatRows` functions**
+    List<dynamic> adjustedFreq = addDataPoints(cstFreq);
+    List<dynamic> adjustedGrad = addDataPoints(cstGrad);
+
+    // Convert adjusted data to matrix rows
+    List<List<dynamic>> freqMatrix = makeMatRows(adjustedFreq);
+    List<List<dynamic>> gradMatrix = makeMatRows(adjustedGrad);
+
+    final isMobile =
+        MediaQuery.of(context).size.width < 600; // Adjust as needed
     const insetPadding = 10.0;
 
     // Prepare the content widget with scrollbars
     final content = isMobile
         ? SizedBox(
             width: MediaQuery.of(context).size.width - 2 * insetPadding,
-            child: _getFreqWidget(cstFreq, cstGrad),
+            child: _getFreqWidget(freqMatrix, gradMatrix),
           )
         : Container(
             constraints: const BoxConstraints(
               maxHeight: 400,
               maxWidth: 800,
             ),
-            child: _getFreqWidget(cstFreq, cstGrad),
+            child: _getFreqWidget(freqMatrix, gradMatrix),
           );
 
     showDialog(
@@ -761,14 +801,104 @@ class DictionaryContentView extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.ok),
+            child: Text('OK'), // Replace with your localization if needed
           ),
         ],
       ),
     );
   }
 
-  Scrollbar _getFreqWidget(List<dynamic> cstFreq, List<dynamic> cstGrad) {
+  // **4. Your `addDataPoints` function**
+  List<dynamic> addDataPoints(List<dynamic> data) {
+    List<dynamic> result = [];
+    int dataCounter = 0;
+
+    // First loop for Mūla (first 19 rows)
+    for (int i = 1; i <= 19; i++) {
+      result.add(dataCounter < data.length ? data[dataCounter++] : 'i');
+    }
+    // Insert 9 "i" placeholders for Mūla after the first 19 elements
+    for (int i = 1; i <= 9; i++) {
+      result.add('i');
+    }
+
+    // Second loop for Aṭṭhakathā (12 rows)
+    for (int i = 1; i <= 12; i++) {
+      result.add(dataCounter < data.length ? data[dataCounter++] : 'i');
+    }
+    // Add 3 "i" placeholders before 113
+    for (int i = 1; i <= 3; i++) {
+      result.add('i');
+    }
+
+    // Add 113
+    result.add(dataCounter < data.length ? data[dataCounter++] : 'i');
+    // Add 3 "i" placeholders after 113
+    for (int i = 1; i <= 3; i++) {
+      result.add('i');
+    }
+
+    // Add 28 and then 8 "i" placeholders after it
+    result.add(
+        dataCounter < data.length ? data[dataCounter++] : 'i'); // Adding 28
+    for (int i = 1; i <= 8; i++) {
+      result.add('i');
+    }
+
+    // Now start Ṭīkā section
+    result.add('i');
+    result.add('i'); // Add two "i" placeholders
+    result
+        .add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 184
+    result.add('i');
+    result.add('i'); // Add two "i" placeholders
+
+    result.add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 66
+    result.add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 37
+    result.add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 20
+    result.add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 41
+
+    result.add('i');
+    result.add('i'); // Add two "i" placeholders
+    result.add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 35
+
+    result.add('i');
+    result.add('i');
+    result.add('i'); // Add three "i"s
+
+    result
+        .add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 160
+
+    result.add('i');
+    result.add('i');
+    result.add('i'); // Add three "i"s
+
+    // Add the rest of the data
+    while (dataCounter < data.length) {
+      result.add(data[dataCounter++]);
+    }
+
+    return result;
+  }
+
+  // **5. Your `makeMatRows` function**
+  List<List<dynamic>> makeMatRows(List<dynamic> adjustedData) {
+    List<List<dynamic>> matrix = [];
+
+    for (int i = 0; i < 28; i++) {
+      matrix.add([
+        adjustedData[i] == 'i' ? null : adjustedData[i], // M
+        adjustedData[i + 28] == 'i' ? null : adjustedData[i + 28], // A
+        adjustedData[i + 56] == 'i' ? null : adjustedData[i + 56], // Ṭ
+      ]);
+    }
+
+    return matrix;
+  }
+
+  // **6. Function to build the frequency widget**
+  Scrollbar _getFreqWidget(
+      List<List<dynamic>> freqMatrix, List<List<dynamic>> gradMatrix) {
     final horizontal = ScrollController();
     final vertical = ScrollController();
 
@@ -786,17 +916,19 @@ class DictionaryContentView extends StatelessWidget {
           child: SingleChildScrollView(
             controller: horizontal,
             scrollDirection: Axis.horizontal,
-            child: _getFreqTable(cstFreq, cstGrad),
+            child: _getFreqTable(freqMatrix, gradMatrix),
           ),
         ),
       ),
     );
   }
 
-  Table _getFreqTable(List<dynamic> cstFreq, List<dynamic> cstGrad) {
+  // **7. Function to build the frequency table**
+  Table _getFreqTable(
+      List<List<dynamic>> freqMatrix, List<List<dynamic>> gradMatrix) {
     List<TableRow> rows = [];
 
-    // Add the header row with consistent number of columns
+    // Add the header row
     rows.add(
       const TableRow(
         children: [
@@ -807,104 +939,40 @@ class DictionaryContentView extends StatelessWidget {
           ),
           Padding(
             padding: EdgeInsets.all(8.0),
-            child: Text("Subsection",
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text("M", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
           Padding(
             padding: EdgeInsets.all(8.0),
-            child: Text("Frequency",
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text("A", style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text("Ṭ", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
 
-    // Define the sections and subsections
-    final List<Map<String, dynamic>> sections = [
-      {
-        'name': 'Vinaya',
-        'subsections': [
-          'Pārājika',
-          'Pācittiya',
-          'Mahāvagga',
-          'Cūḷavagga',
-          'Parivāra'
-        ],
-        'freqIndices': [0, 1, 2, 3, 4],
-      },
-      {
-        'name': 'Sutta',
-        'subsections': [
-          'Dīgha',
-          'Majjhima',
-          'Saṃyutta',
-          'Aṅguttara',
-          'Khuddaka 1',
-          'Khuddaka 2',
-          'Khuddaka 3'
-        ],
-        'freqIndices': [5, 6, 7, 8, 9, 10, 11],
-      },
-      {
-        'name': 'Abhidhamma',
-        'subsections': [
-          'Dhammasaṅgaṇī',
-          'Vibhaṅga',
-          'Dhātukathā',
-          'Puggalapaññatti',
-          'Kathāvatthu',
-          'Yamaka',
-          'Paṭṭhāna'
-        ],
-        'freqIndices': [12, 13, 14, 15, 16, 17, 18],
-      },
-    ];
+    for (int i = 0; i < freqMatrix.length; i++) {
+      var freqRow = freqMatrix[i];
+      var gradRow = gradMatrix[i];
 
-    // Build the table rows
-    for (var section in sections) {
-      String sectionName = section['name'];
-      List<String> subsections = section['subsections'];
-      List<int> indices = section['freqIndices'];
+      String section = expectedFrequencies[i]['section']!;
 
-      // For each subsection, create a row
-      for (int i = 0; i < subsections.length; i++) {
-        String subsectionName = subsections[i];
-        int index = indices[i];
-
-        // Get frequency data, handle if index is out of range
-        String freq =
-            index < cstFreq.length ? cstFreq[index]?.toString() ?? '-' : '-';
-        // Get grade data and use it to set background color
-        int grade = index < cstGrad.length ? cstGrad[index] ?? 0 : 0;
-
-        rows.add(
-          TableRow(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(sectionName),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(subsectionName),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                // Use grade to set background color
-                child: Container(
-                  color: _getGradeColor(grade),
-                  child: Text(freq),
-                ),
-              ),
-            ],
-          ),
-        );
-
-        // After the first row of a section, set sectionName to empty to avoid repetition
-        if (sectionName.isNotEmpty) {
-          sectionName = '';
-        }
-      }
+      // Build the table row
+      rows.add(
+        TableRow(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(section),
+            ),
+            _buildFrequencyCell(freqRow[0], gradRow[0]),
+            _buildFrequencyCell(freqRow[1], gradRow[1]),
+            _buildFrequencyCell(freqRow[2], gradRow[2]),
+          ],
+        ),
+      );
     }
 
     return Table(
@@ -914,53 +982,36 @@ class DictionaryContentView extends StatelessWidget {
     );
   }
 
-// Helper function to map grade to color
-  Color _getGradeColor(int grade) {
+  // **8. Helper function to build frequency cell with grade color**
+  Widget _buildFrequencyCell(dynamic frequency, dynamic grade) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        color: _getGradeColor(grade),
+        child: Text(
+          frequency != null ? frequency.toString() : '-',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  // **9. Helper function to map grade to color**
+  Color _getGradeColor(dynamic grade) {
     // You can modify the color logic based on your requirements
-    if (grade == 0) return Colors.white;
+    if (grade == null || grade == 0) return Colors.white;
     if (grade == 1) return Colors.lightBlue[50]!;
     if (grade == 2) return Colors.lightBlue[100]!;
     if (grade == 3) return Colors.lightBlue[200]!;
     if (grade == 4) return Colors.lightBlue[300]!;
     if (grade == 5) return Colors.lightBlue[400]!;
+    if (grade == 9) return Colors.lightBlue[700]!;
+    if (grade == 10) return Colors.lightBlue[800]!;
     // Add more ranges if necessary
     return Colors.lightBlue[500]!;
   }
 
-// Helper function to build each section row with data
-  TableRow _buildSectionRow(String section, List<dynamic> cstFreq,
-      List<dynamic> cstGrad, int start, int end) {
-    List<Widget> cells = [
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(section, style: TextStyle(fontWeight: FontWeight.bold)),
-      ),
-    ];
-
-    // Add frequency and grade data for each subsection
-    for (int i = start; i <= end; i++) {
-      // Display empty cell if data is missing
-      cells.add(Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: i < cstFreq.length
-            ? Text(cstFreq[i]?.toString() ?? '-')
-            : Container(), // Handle null cases gracefully
-      ));
-      cells.add(Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: i < cstGrad.length
-            ? Text(cstGrad[i]?.toString() ?? '-')
-            : Container(), // Handle null cases gracefully
-      ));
-    }
-
-    // If fewer columns are provided, pad with empty widgets
-    while (cells.length < 6) {
-      cells.add(SizedBox.shrink());
-    }
-
-    return TableRow(children: cells);
-  }
+  // **Modified code ends here**
 
   String getLeftCharacters(String text, int offset) {
     RegExp wordBoundary = RegExp(r'[\s\.\-",\+]');
