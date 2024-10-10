@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tipitaka_pali/business_logic/models/freq.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/controller/dictionary_controller.dart';
+import 'package:tipitaka_pali/utils/platform_info.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/utils/super_scripter_uni.dart';
+import '../../../../services/prefs.dart';
 
 // **1. Define `expectedFrequencies` at the global level**
 const List<Map<String, String>> expectedFrequencies = [
@@ -62,38 +66,27 @@ void showFreqDialog(BuildContext context, int wordId) async {
   List<List<dynamic>> freqMatrix = makeMatRows(adjustedFreq);
   List<List<dynamic>> gradMatrix = makeMatRows(adjustedGrad);
 
-  final isMobile = MediaQuery.of(context).size.width < 600; // Adjust as needed
+  final isMobile = Mobile.isPhone(context);
   const insetPadding = 10.0;
 
   // Prepare the content widget with scrollbars
-  final content = isMobile
-      ? SizedBox(
-          width: MediaQuery.of(context).size.width - 2 * insetPadding,
-          child: _getFreqWidget(context, freqMatrix, gradMatrix),
-        )
-      : Container(
-          constraints: const BoxConstraints(
-            maxHeight: 400,
-            maxWidth: 800,
-          ),
-          child: _getFreqWidget(context, freqMatrix, gradMatrix),
-        );
-
+  final content = SizedBox(
+    width:
+        isMobile ? MediaQuery.of(context).size.width - 2 * insetPadding : 400,
+    height: isMobile ? null : 400,
+    child: _getFreqWidget(context, freqMatrix, gradMatrix),
+  );
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text(
-        "Frequency data for:\n ${freq.headword} (CST)",
-        textAlign: TextAlign.center, // This will center the text
-      ),
+      title: Text("CST Data For ${superscripterUni(freq.headword)}"),
       contentPadding: isMobile ? EdgeInsets.zero : null,
       insetPadding: isMobile ? const EdgeInsets.all(insetPadding) : null,
       content: content,
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('OK'), // Replace with your localization if needed
-        ),
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.ok)),
       ],
     ),
   );
@@ -253,7 +246,10 @@ Table _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(section),
+            child: Text(section,
+                style: TextStyle(
+                    fontSize: Prefs.dictionaryFontSize.toDouble(),
+                    fontWeight: FontWeight.bold)),
           ),
           _buildFrequencyCell(context, freqRow[0], gradRow[0]),
           _buildFrequencyCell(context, freqRow[1], gradRow[1]),
