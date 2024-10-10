@@ -43,16 +43,8 @@ void showFreqDialog(BuildContext context, int wordId) async {
   var dictionaryController = context.read<DictionaryController>();
   Freq? freq = await dictionaryController.getDpdFreq(wordId);
 
-  // Prevent using context across async gaps
   if (!context.mounted) return;
-
-  // Handle case where no frequency data is found
-  if (freq == null) {
-    // Optionally, you can add a dialog to handle cases where frequency data is not found
-    return;
-  }
-
-  debugPrint('Frequency data: $freq');
+  if (freq == null) return;
 
   // Parse freq_data to extract the CST frequency and grade
   List<dynamic> cstFreq = freq.freqData['CstFreq'];
@@ -69,32 +61,40 @@ void showFreqDialog(BuildContext context, int wordId) async {
   final isMobile = Mobile.isPhone(context);
   const insetPadding = 10.0;
 
-  // Prepare the content widget with scrollbars
-  final content = SizedBox(
-    width:
-        isMobile ? MediaQuery.of(context).size.width - 2 * insetPadding : 400,
-    height: isMobile ? null : 400,
-    child: _getFreqWidget(context, freqMatrix, gradMatrix),
+  final content = Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Flexible(
+        child: isMobile
+            ? SizedBox(
+                width: MediaQuery.of(context).size.width - 2 * insetPadding,
+                child: _getFreqWidget(context, freqMatrix, gradMatrix),
+              )
+            : Container(
+                constraints: const BoxConstraints(
+                  maxHeight: 400,
+                  maxWidth: 800,
+                ),
+                child: _getFreqWidget(context, freqMatrix, gradMatrix),
+              ),
+      ),
+      const Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Text(
+          "1. Totals for the group",
+          style: TextStyle(fontStyle: FontStyle.italic),
+        ),
+      ),
+    ],
   );
+
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
       title: Text("CST Data For ${superscripterUni(freq.headword)}"),
       contentPadding: isMobile ? EdgeInsets.zero : null,
       insetPadding: isMobile ? const EdgeInsets.all(insetPadding) : null,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          content,
-          const SizedBox(height: 8),
-          const Text(
-            "1. Totals for the group",
-            style: TextStyle(
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
+      content: content,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -208,11 +208,10 @@ List<List<dynamic>> makeMatRows(List<dynamic> adjustedData) {
 }
 
 // ** Function to build the frequency widget**
-Scrollbar _getFreqWidget(BuildContext context, List<List<dynamic>> freqMatrix,
+Widget _getFreqWidget(BuildContext context, List<List<dynamic>> freqMatrix,
     List<List<dynamic>> gradMatrix) {
   final horizontal = ScrollController();
   final vertical = ScrollController();
-
   return Scrollbar(
     controller: vertical,
     thumbVisibility: true,
