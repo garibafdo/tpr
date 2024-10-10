@@ -311,7 +311,7 @@ class DictionaryController with ChangeNotifier {
       formattedDefinition += _addStyleToBook(definition.bookName, fontStyling);
 
       String def = definition.definition;
-      formattedDefinition += '<div style="$fontStyling">${def}</div>';
+      formattedDefinition += '<div style="$fontStyling">$def</div>';
     }
     return formattedDefinition;
   }

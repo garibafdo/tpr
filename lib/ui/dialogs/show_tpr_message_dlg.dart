@@ -26,10 +26,10 @@ class WhatsNewDialog extends StatefulWidget {
   const WhatsNewDialog({super.key, required this.tprMessage});
 
   @override
-  _WhatsNewDialogState createState() => _WhatsNewDialogState();
+  WhatsNewDialogState createState() => WhatsNewDialogState();
 }
 
-class _WhatsNewDialogState extends State<WhatsNewDialog> {
+class WhatsNewDialogState extends State<WhatsNewDialog> {
   bool _showWhatsNew = Prefs.showWhatsNew; // use initial value from Prefs
 
   @override
