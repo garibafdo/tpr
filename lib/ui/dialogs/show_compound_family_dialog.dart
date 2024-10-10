@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/controller/dictionary_controller.dart';
 import 'package:tipitaka_pali/utils/platform_info.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:tipitaka_pali/utils/super_scripter_uni.dart';
+import 'package:tipitaka_pali/utils/display_utils.dart';
 
 import '../../../../business_logic/models/dpd_compound_family.dart';
 import '../../../../services/prefs.dart';
@@ -38,18 +38,21 @@ showCompoundFamilyDialog(BuildContext context, int wordId) async {
   final isMobile = Mobile.isPhone(context);
   const insetPadding = 10.0;
   final word = first.word.replaceAll(RegExp(r" \d.*\$"), '');
+  final compoundFamily = first.compoundFamily;
 
   final content = isMobile
       ? SizedBox(
           width: MediaQuery.of(context).size.width - 2 * insetPadding,
-          child: _getCompoundFamilyWidget(count, word, jsonData),
+          child:
+              _getCompoundFamilyWidget(count, word, jsonData, compoundFamily),
         )
       : Container(
           constraints: const BoxConstraints(
             maxHeight: 400,
             maxWidth: 800,
           ),
-          child: _getCompoundFamilyWidget(count, word, jsonData));
+          child:
+              _getCompoundFamilyWidget(count, word, jsonData, compoundFamily));
 
   showDialog(
       context: context,
@@ -66,7 +69,7 @@ showCompoundFamilyDialog(BuildContext context, int wordId) async {
           ));
 }
 
-Scrollbar _getCompoundFamilyWidget(count, word, jsonData) {
+Scrollbar _getCompoundFamilyWidget(count, word, jsonData, compoundFamily) {
   final horizontal = ScrollController();
   final vertical = ScrollController();
   return Scrollbar(
@@ -86,7 +89,7 @@ Scrollbar _getCompoundFamilyWidget(count, word, jsonData) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _getCompoundFamilyHeader(count, word),
+                _getCompoundFamilyHeader(count, compoundFamily),
                 _getCompoundFamilyTable(jsonData)
               ],
             )),
@@ -95,14 +98,14 @@ Scrollbar _getCompoundFamilyWidget(count, word, jsonData) {
   );
 }
 
-SelectableText _getCompoundFamilyHeader(count, word) {
+SelectableText _getCompoundFamilyHeader(count, compoundFamily) {
   return SelectableText.rich(
     TextSpan(children: [
       TextSpan(
           text: '$count', style: const TextStyle(fontWeight: FontWeight.bold)),
       const TextSpan(text: ' compounds which contain '),
       TextSpan(
-          text: word,
+          text: compoundFamily,
           style: TextStyle(
               fontSize: Prefs.dictionaryFontSize.toDouble(),
               fontWeight: FontWeight.bold)),
@@ -125,7 +128,7 @@ Table _getCompoundFamilyTable(List<dynamic> jsonData) {
                 item[0],
                 style: TextStyle(
                     fontSize: Prefs.dictionaryFontSize.toDouble(),
-                    color: Colors.orange,
+                    color: getDpdHeaderColor(),
                     fontWeight: FontWeight.bold),
               ),
             ),

@@ -6,7 +6,7 @@ import 'package:tipitaka_pali/business_logic/models/dpd_root_family.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/controller/dictionary_controller.dart';
 import 'package:tipitaka_pali/utils/platform_info.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:tipitaka_pali/utils/super_scripter_uni.dart';
+import 'package:tipitaka_pali/utils/display_utils.dart';
 
 import '../../../../services/prefs.dart';
 
@@ -127,7 +127,7 @@ Table _getRootFamilyTable(List<dynamic> jsonData) {
                 item[0],
                 style: TextStyle(
                     fontSize: Prefs.dictionaryFontSize.toDouble(),
-                    color: Colors.orange,
+                    color: getDpdHeaderColor(),
                     fontWeight: FontWeight.bold),
               ),
             ),

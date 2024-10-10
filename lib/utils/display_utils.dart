@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:tipitaka_pali/services/prefs.dart';
+
 String superscripterUni(String text) {
   // Superscript using unicode characters.
   text = text.replaceAllMapped(
@@ -16,4 +19,14 @@ String superscripterUni(String text) {
   text = text.replaceAll('9', '⁹');
   text = text.replaceAll('.', '·');
   return text;
+}
+
+Color getDpdHeaderColor() {
+  if (Prefs.darkThemeOn) {
+    // Return a bright orange color for dark mode
+    return Colors.orange[300]!; // Lighter orange for better visibility
+  } else {
+    // Return a darker orange color for light mode
+    return Color.fromARGB(255, 183, 86, 29)!; // Darker orange for light mode
+  }
 }

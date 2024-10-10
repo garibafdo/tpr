@@ -4,10 +4,10 @@ import 'package:tipitaka_pali/business_logic/models/freq.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/controller/dictionary_controller.dart';
 import 'package:tipitaka_pali/utils/platform_info.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:tipitaka_pali/utils/super_scripter_uni.dart';
+import 'package:tipitaka_pali/utils/display_utils.dart';
 import '../../../../services/prefs.dart';
 
-// **1. Define `expectedFrequencies` at the global level**
+// Define `expectedFrequencies` at the global level**
 const List<Map<String, String>> expectedFrequencies = [
   {'section': 'Pārājika'},
   {'section': 'Pācittiya'},
@@ -59,7 +59,7 @@ void showFreqDialog(BuildContext context, int wordId) async {
   List<dynamic> cstGrad = freq.freqData['CstGrad'];
 
   // Adjust the data arrays using your `addDataPoints` and `makeMatRows` functions
-  List<dynamic> adjustedFreq = addDataPoints(cstFreq);
+  List<dynamic> adjustedFreq = addDataPoints(cstFreq, addSubscript: true);
   List<dynamic> adjustedGrad = addDataPoints(cstGrad);
 
   // Convert adjusted data to matrix rows
@@ -82,18 +82,33 @@ void showFreqDialog(BuildContext context, int wordId) async {
       title: Text("CST Data For ${superscripterUni(freq.headword)}"),
       contentPadding: isMobile ? EdgeInsets.zero : null,
       insetPadding: isMobile ? const EdgeInsets.all(insetPadding) : null,
-      content: content,
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          content,
+          const SizedBox(height: 8),
+          const Text(
+            "1. Totals for the group",
+            style: TextStyle(
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.ok)),
+          onPressed: () => Navigator.pop(context),
+          child: Text(AppLocalizations.of(context)!.ok),
+        ),
       ],
     ),
   );
 }
 
-// **4. Your `addDataPoints` function**
-List<dynamic> addDataPoints(List<dynamic> data) {
+// based on the data for araha1.  The issue is the data has holes or is designed for
+// merged cells.. we need to fill the wholes and then we can flip the array better.
+// it is a crude function but it works.
+List<dynamic> addDataPoints(List<dynamic> data, {bool addSubscript = false}) {
   List<dynamic> result = [];
   int dataCounter = 0;
 
@@ -101,6 +116,7 @@ List<dynamic> addDataPoints(List<dynamic> data) {
   for (int i = 1; i <= 19; i++) {
     result.add(dataCounter < data.length ? data[dataCounter++] : 'i');
   }
+
   // Insert 9 "i" placeholders for Mūla after the first 19 elements
   for (int i = 1; i <= 9; i++) {
     result.add('i');
@@ -110,13 +126,17 @@ List<dynamic> addDataPoints(List<dynamic> data) {
   for (int i = 1; i <= 12; i++) {
     result.add(dataCounter < data.length ? data[dataCounter++] : 'i');
   }
+
   // Add 3 "i" placeholders before 113
   for (int i = 1; i <= 3; i++) {
     result.add('i');
   }
 
-  // Add 113
-  result.add(dataCounter < data.length ? data[dataCounter++] : 'i');
+  // Add 113 and handle addStar logic
+  result.add(dataCounter < data.length
+      ? (addSubscript ? '${data[dataCounter++]}¹' : data[dataCounter++])
+      : 'i');
+
   // Add 3 "i" placeholders after 113
   for (int i = 1; i <= 3; i++) {
     result.add('i');
@@ -132,7 +152,11 @@ List<dynamic> addDataPoints(List<dynamic> data) {
   // Now start Ṭīkā section
   result.add('i');
   result.add('i'); // Add two "i" placeholders
-  result.add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 184
+
+  result.add(dataCounter < data.length
+      ? (addSubscript ? '${data[dataCounter++]}¹' : data[dataCounter++])
+      : 'i');
+
   result.add('i');
   result.add('i'); // Add two "i" placeholders
 
@@ -143,13 +167,18 @@ List<dynamic> addDataPoints(List<dynamic> data) {
 
   result.add('i');
   result.add('i'); // Add two "i" placeholders
-  result.add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 35
+
+  result.add(dataCounter < data.length
+      ? (addSubscript ? '${data[dataCounter++]}¹' : data[dataCounter++])
+      : 'i');
 
   result.add('i');
   result.add('i');
   result.add('i'); // Add three "i"s
 
-  result.add(dataCounter < data.length ? data[dataCounter++] : 'i'); // Add 160
+  result.add(dataCounter < data.length
+      ? (addSubscript ? '${data[dataCounter++]}¹' : data[dataCounter++])
+      : 'i');
 
   result.add('i');
   result.add('i');
@@ -163,7 +192,7 @@ List<dynamic> addDataPoints(List<dynamic> data) {
   return result;
 }
 
-// **5. Your `makeMatRows` function**
+// ** `makeMatRows` function to flip the vertical to horizontal 3x3 rows**
 List<List<dynamic>> makeMatRows(List<dynamic> adjustedData) {
   List<List<dynamic>> matrix = [];
 
@@ -178,7 +207,7 @@ List<List<dynamic>> makeMatRows(List<dynamic> adjustedData) {
   return matrix;
 }
 
-// **6. Function to build the frequency widget**
+// ** Function to build the frequency widget**
 Scrollbar _getFreqWidget(BuildContext context, List<List<dynamic>> freqMatrix,
     List<List<dynamic>> gradMatrix) {
   final horizontal = ScrollController();
@@ -205,30 +234,54 @@ Scrollbar _getFreqWidget(BuildContext context, List<List<dynamic>> freqMatrix,
   );
 }
 
-// **7. Function to build the frequency table**
+// ** Function to build the frequency table**
 Table _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
     List<List<dynamic>> gradMatrix) {
   List<TableRow> rows = [];
 
   // Add the header row
   rows.add(
-    const TableRow(
+    TableRow(
       children: [
         Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text("Section", style: TextStyle(fontWeight: FontWeight.bold)),
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            "Section",
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: getDpdHeaderColor(),
+                ),
+          ),
         ),
         Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text("M", style: TextStyle(fontWeight: FontWeight.bold)),
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            "M",
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: getDpdHeaderColor(),
+                ),
+          ),
         ),
         Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text("A", style: TextStyle(fontWeight: FontWeight.bold)),
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            "A",
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: getDpdHeaderColor(),
+                ),
+          ),
         ),
         Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text("Ṭ", style: TextStyle(fontWeight: FontWeight.bold)),
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            "Ṭ",
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: getDpdHeaderColor(),
+                ),
+          ),
         ),
       ],
     ),
@@ -249,7 +302,8 @@ Table _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
             child: Text(section,
                 style: TextStyle(
                     fontSize: Prefs.dictionaryFontSize.toDouble(),
-                    fontWeight: FontWeight.bold)),
+                    fontWeight: FontWeight.bold,
+                    color: getDpdHeaderColor())),
           ),
           _buildFrequencyCell(context, freqRow[0], gradRow[0]),
           _buildFrequencyCell(context, freqRow[1], gradRow[1]),
@@ -266,9 +320,11 @@ Table _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
   );
 }
 
-// **8. Helper function to build frequency cell with grade color**
+// ** Helper function to build frequency cell with grade color**
 Widget _buildFrequencyCell(
     BuildContext context, dynamic frequency, dynamic grade) {
+  int gradeInt =
+      (grade is int) ? grade : (int.tryParse(grade?.toString() ?? '0') ?? 0);
   return Padding(
     padding: const EdgeInsets.all(8.0),
     child: Container(
@@ -277,14 +333,16 @@ Widget _buildFrequencyCell(
         frequency != null ? frequency.toString() : '-',
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: Theme.of(context).textTheme.bodyMedium?.color,
+          color: gradeInt > 4
+              ? Colors.white
+              : Theme.of(context).textTheme.bodyMedium?.color,
         ),
       ),
     ),
   );
 }
 
-// **9. Helper function to map grade to color**
+// ** Helper function to map grade to color**
 Color _getGradeColor(BuildContext context, dynamic grade) {
   bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 

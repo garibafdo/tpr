@@ -9,7 +9,7 @@ import 'package:tipitaka_pali/services/prefs.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/controller/dictionary_controller.dart';
 import 'package:tipitaka_pali/ui/screens/settings/download_view.dart';
 import 'package:tipitaka_pali/utils/platform_info.dart';
-import 'package:tipitaka_pali/utils/super_scripter_uni.dart';
+import 'package:tipitaka_pali/utils/display_utils.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 showDeclensionDialog(BuildContext context, int wordId) async {
@@ -79,10 +79,11 @@ showDeclensionDialog(BuildContext context, int wordId) async {
             List<String> cell = entry.value;
             if (colIndex == 0) {
               return Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(8.0),
                 child: SelectableText(cell[0],
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, color: Colors.orange)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: getDpdHeaderColor())),
               );
             }
             if (colIndex % 2 != 1) {
@@ -97,8 +98,9 @@ showDeclensionDialog(BuildContext context, int wordId) async {
               if (rowIndex == 0) {
                 spans.add(TextSpan(
                     text: value,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, color: Colors.orange)));
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: getDpdHeaderColor())));
               } else if (value.isNotEmpty) {
                 spans.add(TextSpan(
                     text: inflection.stem,
