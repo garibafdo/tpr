@@ -8,8 +8,9 @@ import 'package:tipitaka_pali/utils/display_utils.dart';
 import 'package:tipitaka_pali/utils/pali_script_converter.dart';
 import 'package:tipitaka_pali/utils/platform_info.dart';
 
-import '../../../../services/prefs.dart';
 import '../../utils/font_utils.dart';
+
+double freqFontSize = 14.0;
 
 // Define `expectedFrequencies` at the global level**
 const List<Map<String, String>> expectedFrequencies = [
@@ -47,6 +48,7 @@ const List<Map<String, String>> expectedFrequencies = [
 ];
 
 void showFreqDialog(BuildContext context, int wordId) async {
+  freqFontSize = 15 * 15 / MediaQuery.of(context).textScaler.scale(14);
   var dictionaryController = context.read<DictionaryController>();
   Freq? freq = await dictionaryController.getDpdFreq(wordId);
 
@@ -76,8 +78,12 @@ void showFreqDialog(BuildContext context, int wordId) async {
     children: [
       Flexible(
         child: isMobile
-            ? SizedBox(
-                width: mobileWidth,
+            ? Container(
+                // width: mobileWidth,
+                  constraints: BoxConstraints(
+
+                    minWidth: mobileWidth,
+                  ),
                 child: freqWidget,
               )
             : Container(
@@ -245,11 +251,17 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
   List<TableRow> rows = [];
 
   // STYLES ====================================================================
-  final headerStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
-      fontWeight: FontWeight.w800, color: getDpdHeaderColor(), height: 1);
+  final headerStyle = TextStyle(
+    fontFamily: FontUtils.getfontName(script: Script.roman),
+    fontSize: freqFontSize,
+    fontWeight: FontWeight.w800,
+    color: getDpdHeaderColor(),
+    height: 1,
+  );
 
   final sectionStyle = TextStyle(
-      fontSize: Prefs.dictionaryFontSize.toDouble(),
+      fontFamily: FontUtils.getfontName(script: Script.roman),
+      fontSize: freqFontSize,
       fontWeight: FontWeight.bold,
       color: getDpdHeaderColor(),
       height: 1);
@@ -270,20 +282,37 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
   rows.add(
     TableRow(
       children: [
-        getHeader("Section"),
-        getHeader("M", TextAlign.center),
-        getHeader("A", TextAlign.center),
-        getHeader("Ṭ", TextAlign.center),
+        getHeader('Section'),
+        getHeader('M', TextAlign.center),
+        getHeader('A', TextAlign.center),
+        getHeader('Ṭ', TextAlign.center),
       ],
     ),
   );
 
   double cellHeight =
-      paintedHeight(TextSpan(text: 'Majjhima', style: sectionStyle)) + 2 * 8;
-  double headerHeight = paintedHeight(TextSpan(
+      paintedHeight(context, TextSpan(text: 'Majjhima', style: sectionStyle)) + 2 * 8;
+  double largestSectionWidth = paintedWidth(context, 'Khuddaka Nikāya 3', sectionStyle);
+  double headerHeight = paintedHeight(context, TextSpan(
     text: 'Section MAṬ',
     style: headerStyle,
   ));
+  debugPrint('cellHeight: $cellHeight, header height: $headerHeight');
+
+  // FIND the largest frequency cell width =====================================
+  final largestFreqCellWidth = freqMatrix
+      .expand((row) => row)
+      .whereNotNull()
+      .map((element) => paintedWidth(
+          context,
+          element.toString(),
+          TextStyle(
+            // really important to have the same font used in measurements
+            fontFamily: FontUtils.getfontName(script: Script.roman),
+            fontSize: freqFontSize,
+            height: 1,
+          )).ceil().toDouble())
+      .max;
 
   // Offsets, sizes etc magic numbers ==========================================
   const padding = 8.0;
@@ -293,19 +322,19 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
   const borderWidth = 0.5;
   const scrollbarDesktopWidth = 15.0;
   const cellLeeway = 2.0;
+  final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
   final topOffset = headerHeight + doublePadding;
+  final projectedTableWidth = bookLegendWidth +
+      bookLegendGap +
+      (largestSectionWidth + doublePadding + borderWidth * 2) +
+      3 * (largestFreqCellWidth + doublePadding + cellLeeway + borderWidth * 2);
   // End Offsets ===============================================================
+
+  debugPrint('\nprojectedTableWidth: $projectedTableWidth -- \nmobileWidth: $width -- \ndevicePixelRatio: $devicePixelRatio, \nlargestFreqCellWidth: $largestFreqCellWidth, \nlargestSectionWidth: $largestSectionWidth');
 
   const borderDecoration = BoxDecoration(
       border: Border.fromBorderSide(
           BorderSide(color: Colors.black, width: borderWidth)));
-
-  // FIND the largest frequency cell width =====================================
-  final largestWidth = freqMatrix
-      .expand((row) => row)
-      .whereNotNull()
-      .map((element) => paintedWidth(element.toString()).ceil().toDouble())
-      .max;
 
   for (int i = 0; i < freqMatrix.length; i++) {
     var freqRow = freqMatrix[i];
@@ -369,6 +398,8 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
   final weights = [5, 7, 7, 9];
   final titles = ['Vinaya', 'Sutta', 'Abhidhamma', 'Aññā'];
 
+  debugPrint('topOffset: $topOffset');
+
   return Row(
     mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,25 +409,25 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
         child: Table(
           children: weights.mapIndexed((index, weight) {
             final title = titles[index].split('').join('\n');
-            double bookHeight = weight * (cellHeight + 2 * borderWidth);
+            double bookHeight = weight * (cellHeight);
             return TableRow(
               children: [
                 Container(
-                    constraints: BoxConstraints(
-                      minHeight: bookHeight,
-                    ),
+                    // constraints: BoxConstraints(
+                    //   minHeight: bookHeight,
+                    // ),
                     decoration: borderDecoration,
                     child: SizedBox(
-                        height: bookHeight - doublePadding,
-                        child: Padding(
-                          padding: const EdgeInsets.all(padding),
-                          child: Center(
-                              child: Text(
-                            title,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(height: 1),
-                          )),
-                        ))),
+                        height: bookHeight,
+                        child: Center(
+                            child: Text(
+                              title,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontFamily: FontUtils.getfontName(script: Script.roman),
+                                  fontSize: freqFontSize * 0.9,
+                                  height: 1),
+                            )),)),
               ],
             );
           }).toList(),
@@ -407,17 +438,34 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
           ? Padding(
               padding: const EdgeInsets.only(right: scrollbarDesktopWidth),
               child: Table(
-                defaultColumnWidth: FixedColumnWidth(largestWidth + doublePadding + cellLeeway),
+                defaultColumnWidth: FixedColumnWidth(largestFreqCellWidth + doublePadding + cellLeeway),
                 columnWidths: const {
                   0: IntrinsicColumnWidth(),
                 },
                 children: rows,
               ))
-          : SizedBox(
+          :
+
+      projectedTableWidth > width ?
+
+      Container(
+        constraints: BoxConstraints(
+          minWidth: width - bookLegendGap - bookLegendWidth - doublePadding - cellLeeway,
+              maxWidth: double.infinity,
+        ),
+          // width: ,
+          child: Table(
+            defaultColumnWidth: FixedColumnWidth(largestFreqCellWidth + doublePadding + cellLeeway),
+            columnWidths: const {
+              0: IntrinsicColumnWidth(),
+            },
+            children: rows,
+          ))
+      :
+      SizedBox(
               width: width - bookLegendGap - bookLegendWidth - doublePadding - cellLeeway,
               child: Table(
-                // largestWidth + padding + border width
-                defaultColumnWidth: FixedColumnWidth(largestWidth + doublePadding + cellLeeway),
+                defaultColumnWidth: FixedColumnWidth(largestFreqCellWidth + doublePadding + cellLeeway),
                 columnWidths: const {
                   0: FlexColumnWidth(),
                 },
@@ -470,6 +518,7 @@ Widget _buildFrequencyCell(
         style: TextStyle(
           // really important to have the same font used in measurements
           fontFamily: FontUtils.getfontName(script: Script.roman),
+          fontSize: freqFontSize,
           height: 1,
           color: gradeInt > 4
               ? Colors.white

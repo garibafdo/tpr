@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
 import 'package:tipitaka_pali/utils/pali_script_converter.dart';
 
+import '../ui/dialogs/show_freq_dialog.dart';
 import 'font_utils.dart';
 
 String superscripterUni(String text) {
@@ -34,24 +35,20 @@ Color getDpdHeaderColor() {
   }
 }
 
-double paintedWidth(String text, [TextStyle? textStyle]) {
+double paintedWidth(BuildContext context, String text, TextStyle textStyle) {
   final textPainter = TextPainter(
       text: TextSpan(
           text: text,
-          style: textStyle ??
-              TextStyle(
-                height: 1,
-                fontFamily: FontUtils.getfontName(script: Script.roman),
-              )),
+          style: textStyle),
       textAlign: TextAlign.left,
       textDirection: TextDirection.ltr);
   textPainter.layout();
-  return textPainter.width;
+  return MediaQuery.of(context).textScaler.scale(textPainter.width);
 }
 
-double paintedHeight(TextSpan text) {
+double paintedHeight(BuildContext context, TextSpan text) {
   TextPainter textPainter = TextPainter(
       text: text, textAlign: TextAlign.left, textDirection: TextDirection.ltr);
   textPainter.layout();
-  return textPainter.height;
+  return MediaQuery.of(context).textScaler.scale(textPainter.height);
 }
