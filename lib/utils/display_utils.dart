@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
+import 'package:tipitaka_pali/utils/pali_script_converter.dart';
+
+import 'font_utils.dart';
 
 String superscripterUni(String text) {
   // Superscript using unicode characters.
@@ -27,6 +30,28 @@ Color getDpdHeaderColor() {
     return Colors.orange[300]!; // Lighter orange for better visibility
   } else {
     // Return a darker orange color for light mode
-    return Color.fromARGB(255, 183, 86, 29)!; // Darker orange for light mode
+    return const Color.fromARGB(255, 183, 86, 29)!; // Darker orange for light mode
   }
+}
+
+double paintedWidth(String text, [TextStyle? textStyle]) {
+  final textPainter = TextPainter(
+      text: TextSpan(
+          text: text,
+          style: textStyle ??
+              TextStyle(
+                height: 1,
+                fontFamily: FontUtils.getfontName(script: Script.roman),
+              )),
+      textAlign: TextAlign.left,
+      textDirection: TextDirection.ltr);
+  textPainter.layout();
+  return textPainter.width;
+}
+
+double paintedHeight(TextSpan text) {
+  TextPainter textPainter = TextPainter(
+      text: text, textAlign: TextAlign.left, textDirection: TextDirection.ltr);
+  textPainter.layout();
+  return textPainter.height;
 }

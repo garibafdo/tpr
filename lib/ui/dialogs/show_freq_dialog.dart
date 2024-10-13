@@ -1,42 +1,49 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:tipitaka_pali/business_logic/models/freq.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/controller/dictionary_controller.dart';
-import 'package:tipitaka_pali/utils/platform_info.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:tipitaka_pali/utils/display_utils.dart';
+import 'package:tipitaka_pali/utils/pali_script_converter.dart';
+import 'package:tipitaka_pali/utils/platform_info.dart';
+
 import '../../../../services/prefs.dart';
+import '../../utils/font_utils.dart';
 
 // Define `expectedFrequencies` at the global level**
 const List<Map<String, String>> expectedFrequencies = [
-  {'section': 'Pārājika'},
-  {'section': 'Pācittiya'},
-  {'section': 'Mahāvagga'},
-  {'section': 'Cūḷavagga'},
-  {'section': 'Parivāra'},
-  {'section': 'Dīgha Nikāya'},
-  {'section': 'Majjhima Nikāya'},
-  {'section': 'Saṃyutta Nikāya'},
-  {'section': 'Aṅguttara Nikāya'},
-  {'section': 'Khuddaka Nikāya 1'},
-  {'section': 'Khuddaka Nikāya 2'},
-  {'section': 'Khuddaka Nikāya 3'},
-  {'section': 'Dhammasaṅgaṇī'},
-  {'section': 'Vibhaṅga'},
-  {'section': 'Dhātukathā'},
-  {'section': 'Puggalapaññatti'},
-  {'section': 'Kathāvatthu'},
-  {'section': 'Yamaka'},
-  {'section': 'Paṭṭhāna'},
-  {'section': 'Visuddhimagga'},
-  {'section': 'Leḍī Sayāḍo'},
-  {'section': 'Buddhavandanā'},
-  {'section': 'Vaṃsa'},
-  {'section': 'Byākaraṇa'},
-  {'section': 'Pucchavissajjanā'},
-  {'section': 'Nīti'},
-  {'section': 'Pakiṇṇaka'},
-  {'section': 'Sihaḷa'},
+  {'section': 'Pārājika', 'book': 'Vinaya'},
+  {'section': 'Pācittiya', 'book': 'Vinaya'},
+  {'section': 'Mahāvagga', 'book': 'Vinaya'},
+  {'section': 'Cūḷavagga', 'book': 'Vinaya'},
+  {'section': 'Parivāra', 'book': 'Vinaya'},
+  // ===========================================================================
+  {'section': 'Dīgha Nikāya', 'book': 'Sutta'},
+  {'section': 'Majjhima Nikāya', 'book': 'Sutta'},
+  {'section': 'Saṃyutta Nikāya', 'book': 'Sutta'},
+  {'section': 'Aṅguttara Nikāya', 'book': 'Sutta'},
+  {'section': 'Khuddaka Nikāya 1', 'book': 'Sutta'},
+  {'section': 'Khuddaka Nikāya 2', 'book': 'Sutta'},
+  {'section': 'Khuddaka Nikāya 3', 'book': 'Sutta'},
+  // ===========================================================================
+  {'section': 'Dhammasaṅgaṇī', 'book': 'Abhidhamma'},
+  {'section': 'Vibhaṅga', 'book': 'Abhidhamma'},
+  {'section': 'Dhātukathā', 'book': 'Abhidhamma'},
+  {'section': 'Puggalapaññatti', 'book': 'Abhidhamma'},
+  {'section': 'Kathāvatthu', 'book': 'Abhidhamma'},
+  {'section': 'Yamaka', 'book': 'Abhidhamma'},
+  {'section': 'Paṭṭhāna', 'book': 'Abhidhamma'},
+  // ===========================================================================
+  {'section': 'Visuddhimagga', 'book': 'Aññā'},
+  {'section': 'Leḍī Sayāḍo', 'book': 'Aññā'},
+  {'section': 'Buddhavandanā', 'book': 'Aññā'},
+  {'section': 'Vaṃsa', 'book': 'Aññā'},
+  {'section': 'Byākaraṇa', 'book': 'Aññā'},
+  {'section': 'Pucchavissajjanā', 'book': 'Aññā'},
+  {'section': 'Nīti', 'book': 'Aññā'},
+  {'section': 'Pakiṇṇaka', 'book': 'Aññā'},
+  {'section': 'Sihaḷa', 'book': 'Aññā'},
 ];
 
 void showFreqDialog(BuildContext context, int wordId) async {
@@ -59,7 +66,10 @@ void showFreqDialog(BuildContext context, int wordId) async {
   List<List<dynamic>> gradMatrix = makeMatRows(adjustedGrad);
 
   final isMobile = Mobile.isPhone(context);
-  const insetPadding = 10.0;
+  const mobileScrollbarHeight = 7.0;
+  double mobileWidth = MediaQuery.of(context).size.width - mobileScrollbarHeight;
+  final freqWidget = _getFreqWidget(
+      context, freqMatrix, gradMatrix, isMobile ? mobileWidth : null);
 
   final content = Column(
     mainAxisSize: MainAxisSize.min,
@@ -67,23 +77,16 @@ void showFreqDialog(BuildContext context, int wordId) async {
       Flexible(
         child: isMobile
             ? SizedBox(
-                width: MediaQuery.of(context).size.width - 2 * insetPadding,
-                child: _getFreqWidget(context, freqMatrix, gradMatrix),
+                width: mobileWidth,
+                child: freqWidget,
               )
             : Container(
                 constraints: const BoxConstraints(
                   maxHeight: 400,
                   maxWidth: 800,
                 ),
-                child: _getFreqWidget(context, freqMatrix, gradMatrix),
+                child: freqWidget,
               ),
-      ),
-      const Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text(
-          "1. Totals for the group",
-          style: TextStyle(fontStyle: FontStyle.italic),
-        ),
       ),
     ],
   );
@@ -93,7 +96,7 @@ void showFreqDialog(BuildContext context, int wordId) async {
     builder: (context) => AlertDialog(
       title: Text("CST Data For ${superscripterUni(freq.headword)}"),
       contentPadding: isMobile ? EdgeInsets.zero : null,
-      insetPadding: isMobile ? const EdgeInsets.all(insetPadding) : null,
+      insetPadding: isMobile ? const EdgeInsets.all(10) : null,
       content: content,
       actions: [
         TextButton(
@@ -169,7 +172,7 @@ List<dynamic> addDataPoints(List<dynamic> data, {bool addSubscript = false}) {
   result.add('i'); // Add two "i" placeholders
 
   result.add(dataCounter < data.length
-      ? (addSubscript ? '${data[dataCounter++]}¹' : data[dataCounter++])
+      ? (addSubscript ? '${data[dataCounter++]}' : data[dataCounter++])
       : 'i');
 
   result.add('i');
@@ -209,9 +212,11 @@ List<List<dynamic>> makeMatRows(List<dynamic> adjustedData) {
 
 // ** Function to build the frequency widget**
 Widget _getFreqWidget(BuildContext context, List<List<dynamic>> freqMatrix,
-    List<List<dynamic>> gradMatrix) {
+    List<List<dynamic>> gradMatrix,
+    [double? width]) {
   final horizontal = ScrollController();
   final vertical = ScrollController();
+
   return Scrollbar(
     controller: vertical,
     thumbVisibility: true,
@@ -226,7 +231,7 @@ Widget _getFreqWidget(BuildContext context, List<List<dynamic>> freqMatrix,
         child: SingleChildScrollView(
           controller: horizontal,
           scrollDirection: Axis.horizontal,
-          child: _getFreqTable(context, freqMatrix, gradMatrix),
+          child: _getFreqTable(context, freqMatrix, gradMatrix, width),
         ),
       ),
     ),
@@ -234,104 +239,238 @@ Widget _getFreqWidget(BuildContext context, List<List<dynamic>> freqMatrix,
 }
 
 // ** Function to build the frequency table**
-Table _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
-    List<List<dynamic>> gradMatrix) {
+Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
+    List<List<dynamic>> gradMatrix,
+    [double? width]) {
   List<TableRow> rows = [];
+
+  // STYLES ====================================================================
+  final headerStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.w800, color: getDpdHeaderColor(), height: 1);
+
+  final sectionStyle = TextStyle(
+      fontSize: Prefs.dictionaryFontSize.toDouble(),
+      fontWeight: FontWeight.bold,
+      color: getDpdHeaderColor(),
+      height: 1);
+  // END STYLES ================================================================
+
+  getHeader(String title, [TextAlign? textAlign]) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        title,
+        style: headerStyle,
+        textAlign: textAlign ?? TextAlign.left,
+      ),
+    );
+  }
 
   // Add the header row
   rows.add(
     TableRow(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            "Section",
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: getDpdHeaderColor(),
-                ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            "M",
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: getDpdHeaderColor(),
-                ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            "A",
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: getDpdHeaderColor(),
-                ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            "Ṭ",
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: getDpdHeaderColor(),
-                ),
-          ),
-        ),
+        getHeader("Section"),
+        getHeader("M", TextAlign.center),
+        getHeader("A", TextAlign.center),
+        getHeader("Ṭ", TextAlign.center),
       ],
     ),
   );
+
+  double cellHeight =
+      paintedHeight(TextSpan(text: 'Majjhima', style: sectionStyle)) + 2 * 8;
+  double headerHeight = paintedHeight(TextSpan(
+    text: 'Section MAṬ',
+    style: headerStyle,
+  ));
+
+  // Offsets, sizes etc magic numbers ==========================================
+  const padding = 8.0;
+  const doublePadding = 2.0 * padding;
+  const bookLegendGap = 5.0;
+  const bookLegendWidth = 30.0;
+  const borderWidth = 0.5;
+  const scrollbarDesktopWidth = 15.0;
+  const cellLeeway = 2.0;
+  final topOffset = headerHeight + doublePadding;
+  // End Offsets ===============================================================
+
+  const borderDecoration = BoxDecoration(
+      border: Border.fromBorderSide(
+          BorderSide(color: Colors.black, width: borderWidth)));
+
+  // FIND the largest frequency cell width =====================================
+  final largestWidth = freqMatrix
+      .expand((row) => row)
+      .whereNotNull()
+      .map((element) => paintedWidth(element.toString()).ceil().toDouble())
+      .max;
 
   for (int i = 0; i < freqMatrix.length; i++) {
     var freqRow = freqMatrix[i];
     var gradRow = gradMatrix[i];
 
     String section = expectedFrequencies[i]['section']!;
+    final book = expectedFrequencies[i]['book'];
+
+    // gets the indices of the items of a specific book, e.g. for 'Vinaya' that
+    // would be [0..4] and for 'Sutta' that'd be [5..11]
+    final bookIndices = expectedFrequencies
+        .mapIndexed((index, item) => item['book'] == book ? index : null)
+        .whereType<int>()
+        .toList();
+
+    isTotal(int index) {
+      return bookIndices
+              .map((i) => freqMatrix[i][index])
+              .whereNotNull()
+              .firstWhereOrNull((el) => '$el'.contains('¹')) !=
+          null;
+    }
+
+    getTotalGrade(index) {
+      return bookIndices
+          .map((i) => gradMatrix[i][index])
+          .whereNotNull()
+          .firstWhereOrNull((el) => el != 0);
+    }
+
+    final freqData = ['M', 'A', 'T'].mapIndexed((index, type) {
+      return {
+        'type': type,
+        'freq': freqRow[index],
+        'grad': gradRow[index],
+        'isTotal': isTotal(index),
+        'totalGrad': getTotalGrade(index)
+      };
+    });
+
+    final isFirst = i == bookIndices.first;
+    final isLast = i == bookIndices.last;
 
     // Build the table row
     rows.add(
       TableRow(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(section,
-                style: TextStyle(
-                    fontSize: Prefs.dictionaryFontSize.toDouble(),
-                    fontWeight: FontWeight.bold,
-                    color: getDpdHeaderColor())),
-          ),
-          _buildFrequencyCell(context, freqRow[0], gradRow[0]),
-          _buildFrequencyCell(context, freqRow[1], gradRow[1]),
-          _buildFrequencyCell(context, freqRow[2], gradRow[2]),
+          Container(
+              decoration: borderDecoration,
+              child: Padding(
+                padding: const EdgeInsets.all(padding),
+                child: Text(section, style: sectionStyle),
+              )),
+          ...freqData.map((e) => _buildFrequencyCell(context, e['freq'],
+              e['grad'], e['isTotal'], isFirst, isLast, e['totalGrad']))
         ],
       ),
     );
   }
 
-  return Table(
-    border: TableBorder.all(),
-    defaultColumnWidth: const IntrinsicColumnWidth(),
-    children: rows,
+  final weights = [5, 7, 7, 9];
+  final titles = ['Vinaya', 'Sutta', 'Abhidhamma', 'Aññā'];
+
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: EdgeInsets.only(right: bookLegendGap, top: topOffset),
+        child: Table(
+          children: weights.mapIndexed((index, weight) {
+            final title = titles[index].split('').join('\n');
+            double bookHeight = weight * (cellHeight + 2 * borderWidth);
+            return TableRow(
+              children: [
+                Container(
+                    constraints: BoxConstraints(
+                      minHeight: bookHeight,
+                    ),
+                    decoration: borderDecoration,
+                    child: SizedBox(
+                        height: bookHeight - doublePadding,
+                        child: Padding(
+                          padding: const EdgeInsets.all(padding),
+                          child: Center(
+                              child: Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(height: 1),
+                          )),
+                        ))),
+              ],
+            );
+          }).toList(),
+          defaultColumnWidth: const FixedColumnWidth(bookLegendWidth),
+        ),
+      ),
+      width == null
+          ? Padding(
+              padding: const EdgeInsets.only(right: scrollbarDesktopWidth),
+              child: Table(
+                defaultColumnWidth: FixedColumnWidth(largestWidth + doublePadding + cellLeeway),
+                columnWidths: const {
+                  0: IntrinsicColumnWidth(),
+                },
+                children: rows,
+              ))
+          : SizedBox(
+              width: width - bookLegendGap - bookLegendWidth - doublePadding - cellLeeway,
+              child: Table(
+                // largestWidth + padding + border width
+                defaultColumnWidth: FixedColumnWidth(largestWidth + doublePadding + cellLeeway),
+                columnWidths: const {
+                  0: FlexColumnWidth(),
+                },
+                children: rows,
+              )),
+    ],
   );
 }
 
 // ** Helper function to build frequency cell with grade color**
 Widget _buildFrequencyCell(
-    BuildContext context, dynamic frequency, dynamic grade) {
+    BuildContext context,
+    dynamic frequency,
+    dynamic grade,
+    bool hideBorder,
+    bool isFirst,
+    bool isLast,
+    dynamic gradeAll) {
   int gradeInt =
       (grade is int) ? grade : (int.tryParse(grade?.toString() ?? '0') ?? 0);
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Container(
-      color: _getGradeColor(context, grade),
+  final text = frequency != null
+      ? frequency.toString().replaceAll('¹', '')
+      : hideBorder
+          ? ''
+          : '-';
+  final gradeColor = _getGradeColor(context, hideBorder ? gradeAll : grade);
+
+  BoxBorder boxBorder;
+  if (hideBorder) {
+    boxBorder = Border(
+      left: const BorderSide(width: 0.5, color: Colors.black),
+      top: BorderSide(width: 0.5, color: isFirst ? Colors.black : gradeColor),
+      right: const BorderSide(width: 0.5, color: Colors.black),
+      bottom: BorderSide(width: 0.5, color: isLast ? Colors.black : gradeColor),
+    );
+  } else {
+    boxBorder = const Border.fromBorderSide(
+        BorderSide(color: Colors.black, width: 0.5));
+  }
+  return Container(
+    decoration: BoxDecoration(
+      border: boxBorder,
+      color: gradeColor,
+    ),
+    child: Padding(
+      padding: const EdgeInsets.all(8.0),
       child: Text(
-        frequency != null ? frequency.toString() : '-',
+        text,
         textAlign: TextAlign.center,
         style: TextStyle(
+          // really important to have the same font used in measurements
+          fontFamily: FontUtils.getfontName(script: Script.roman),
+          height: 1,
           color: gradeInt > 4
               ? Colors.white
               : Theme.of(context).textTheme.bodyMedium?.color,
