@@ -92,8 +92,11 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
     String bookName = '';
     int order = 0;
 
+    // if the word is not set to 1 then there is no install or it was overwritten by the dpd update extension
+    // we will prompt them to reinstall .. TODO  we could just run queries again if the table exists and the word is
+    // not found, but this is lazy way for now .. and lazy way rarely gets updated.
     List<Map<String, dynamic>> result = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='dpd__inflections';");
+        "SELECT * from dpd WHERE word='buddha 1' AND has_inflections=1");
     bool hasExtras = result.isNotEmpty;
 
     for (var element in words) {
