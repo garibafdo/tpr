@@ -93,11 +93,21 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
     int order = 0;
 
     // if the word is not set to 1 then there is no install or it was overwritten by the dpd update extension
-    // we will prompt them to reinstall .. TODO  we could just run queries again if the table exists and the word is
+    // we will prompt them to reinstall .. Now added  run queries again if the table exists and the flag is not found word is
     // not found, but this is lazy way for now .. and lazy way rarely gets updated.
     List<Map<String, dynamic>> result = await db.rawQuery(
         "SELECT * from dpd WHERE word='buddha 1' AND has_inflections=1");
-    bool hasExtras = result.isNotEmpty;
+    bool hasInflection = result.isNotEmpty;
+
+    List<Map<String, dynamic>> InflectionTable = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='dpd__inflections';");
+    bool hasInflectionTables = InflectionTable.isNotEmpty;
+
+    if (hasInflectionTables && !hasInflection) {
+      await runUpdateQueryForFlags();
+    }
+
+    bool hasExtras = hasInflectionTables;
 
     for (var element in words) {
       word = element.trimLeft();
@@ -758,5 +768,59 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
     String before = text.substring(0, lastIndex);
     String after = text.substring(lastIndex + from.length);
     return before + to + after;
+  }
+
+  Future<void> runUpdateQueryForFlags() async {
+    final db = await databaseHelper.database;
+    // Run the first update query
+    await db.rawUpdate('''
+    UPDATE dpd 
+    SET has_inflections = 1 
+    WHERE EXISTS ( 
+      SELECT 1 
+      FROM dpd__inflections 
+      WHERE dpd__inflections.id = dpd.id 
+    );
+  ''');
+
+    // Run the second update query
+    await db.rawUpdate('''
+    UPDATE dpd 
+    SET has_root_family = 1 
+    WHERE EXISTS ( 
+      SELECT 1 
+      FROM dpd__word_family_root 
+      WHERE dpd__word_family_root.id = dpd.id 
+    );
+  ''');
+
+    // Run the third update query
+    await db.rawUpdate('''
+    UPDATE dpd 
+    SET has_compound_family = 1 
+    WHERE EXISTS (
+      SELECT 1 
+      FROM dpd__word_family_compound 
+      WHERE dpd__word_family_compound.id = dpd.id
+    ) 
+    OR EXISTS (
+      SELECT 1 
+      FROM dpd__family_compound 
+      WHERE dpd__family_compound.compound_family = 
+        substr(dpd.word, 1, instr(dpd.word, ' ') - 1)
+    );
+  ''');
+
+    // Run the fourth update query
+    await db.rawUpdate('''
+    UPDATE dpd 
+    SET has_freq = 1 
+    WHERE id IN (
+      SELECT dpd.id 
+      FROM dpd  
+      INNER JOIN freq 
+      ON dpd.id = freq.id
+    );
+  ''');
   }
 }
