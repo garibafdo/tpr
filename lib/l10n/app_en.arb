@@ -185,5 +185,6 @@
   "hideIPA": "Hide IPA",
   "hideSanskrit":"Hide Sanskrit",
   "inflectionNoDataTitle": "Inflection Not Found",
-  "inflectionNoDataMessage" : "Selected word has no data."
+  "inflectionNoDataMessage" : "Selected word has no data.",
+  "checkingInternet": "Checking Internet connection"
 }

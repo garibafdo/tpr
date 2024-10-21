@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:tipitaka_pali/business_logic/models/download_list_item.dart';
@@ -97,6 +95,8 @@ class DownloadView extends StatelessWidget {
 
   Future<void> getDownload(BuildContext context, DownloadNotifier dn,
       DownloadListItem downloadListItem) async {
+    dn.message = AppLocalizations.of(context)!.checkingInternet;
+
     if (await checkInternetConnection(dn)) {
       DownloadService downloadService = DownloadService(
           downloadNotifier: dn, downloadListItem: downloadListItem);
