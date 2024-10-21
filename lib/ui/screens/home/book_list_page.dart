@@ -87,9 +87,7 @@ class BookListPage extends StatelessWidget {
                 currentPage: sutta.pageNumber,
                 textToHighlight: sutta.name,
               );
-              if (Mobile.isPhone(context) || Mobile.isTablet(context)) {
-                // Navigator.pushNamed(context, readerRoute,
-                //     arguments: {'book': bookItem.book});
+              if (Mobile.isPhone(context)) {
                 Navigator.push(
                     context,
                     MaterialPageRoute(

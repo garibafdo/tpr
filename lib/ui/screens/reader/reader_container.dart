@@ -110,7 +110,7 @@ class _ReaderContainerState extends State<ReaderContainer> {
                         })
                       }),
           ],
-          keepAlive: false);
+          keepAlive: true);
     }).toList();
 
     if (books.isEmpty) {
