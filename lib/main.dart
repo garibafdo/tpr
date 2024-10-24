@@ -13,6 +13,8 @@ import 'package:devicelocale/devicelocale.dart';
 
 import 'dart:io' show Platform;
 
+import 'package:tipitaka_pali/services/setup_firestore.dart';
+
 void main() async {
   if (Platform.isWindows || Platform.isLinux) {
     // Initialize FFI
@@ -25,28 +27,8 @@ void main() async {
   // Required for async calls in `main`
   WidgetsFlutterBinding.ensureInitialized();
   await Prefs.init();
-
-  const projectId = "tipitaka-pali-reader-firestore";
-  await dotenv.load();
-  final apiKey = dotenv.env['FIREBASE_API_KEY'];
-  //check for internet connection
-
-  if (await InternetConnection().hasInternetAccess) {
-    FirebaseAuth.initialize(apiKey!, VolatileStore());
-    Firestore.initialize(projectId);
-    if (Prefs.isSignedIn) {
-      try {
-        await FirebaseAuth.instance.signIn(Prefs.email, Prefs.password);
-        Prefs.isSignedIn = true;
-        debugPrint('login success');
-      } catch (e) {
-        Prefs.isSignedIn = false;
-        debugPrint(e.toString());
-      }
-    }
-  } else {
-    Prefs.isSignedIn = false;
-  }
+  // async calling of setup of firestore below
+  setupFirestore();
 // Initialize SharedPrefs instance.
   // This view is only called one time.
   // before the select language and before the select script are created
