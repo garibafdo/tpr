@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
@@ -50,6 +52,7 @@ class PaliPageWidget extends StatefulWidget {
 
 final nonPali = RegExp(r'[.,:;\"{}\[\]<>\/\(\) ]+', caseSensitive: false);
 
+/*
 class PaliWidgetFactory extends WidgetFactory {
   Function(String)? showDialogCallback;
   @override
@@ -77,9 +80,9 @@ class PaliWidgetFactory extends WidgetFactory {
     );
   }
 }
-
+*/
 class _PaliPageWidgetState extends State<PaliPageWidget> {
-  final _myFactory = PaliWidgetFactory();
+  final _myFactory = WidgetFactory();
   String? highlightedWord;
   String? lookupWord;
   int? highlightedWordIndex;
@@ -140,28 +143,6 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
 
     final fontName = FontUtils.getfontName(
         script: context.read<ScriptLanguageProvider>().currentScript);
-// callback for showdlg
-    _myFactory.showDialogCallback = (String bookmark) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(AppLocalizations.of(context)!.bookmark),
-            content: SingleChildScrollView(
-              child: Text(_insertBookmarkNewlines(bookmark)),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: Text(AppLocalizations.of(context)!.close),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
-      );
-    };
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -316,6 +297,18 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
                   child: Text('\n '),
                 ));
               }
+
+              if (element.localName == 'a' && element.className == 'bookmark') {
+                final bookmark = element.text;
+                return InlineCustomWidget(
+                  child: IconButton(
+                      onPressed: () {
+                        onClickBookmark(bookmark);
+                      },
+                      tooltip: bookmark,
+                      icon: const Icon(Icons.note, color: Colors.red)),
+                );
+              }
               return null;
             },
             onTapUrl: (word) {
@@ -333,6 +326,28 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
           ),
         ),
       ),
+    );
+  }
+
+  void onClickBookmark(String bookmark) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.bookmark),
+          content: SingleChildScrollView(
+            child: Text(_insertBookmarkNewlines(bookmark)),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(AppLocalizations.of(context)!.close),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -629,7 +644,7 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
     final bookmarkTags = bookmarks.foldIndexed(
         '',
         (index, previousValue, element) =>
-            '$previousValue<a id="bookmark_${index + 1}">note_icon${element.toString()}</a>');
+            '$previousValue<a id="bookmark_${index + 1}" class="bookmark">${element.toString()}</a>');
 
     print('bookmark: $bookmarkTags');
     return '''
