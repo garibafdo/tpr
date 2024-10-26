@@ -26,10 +26,11 @@ void main() async {
 
   // Required for async calls in `main`
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize SharedPrefs instance.
   await Prefs.init();
   // async calling of setup of firestore below
   setupFirestore();
-// Initialize SharedPrefs instance.
+  
   // This view is only called one time.
   // before the select language and before the select script are created
   // set the prefs to the current local if any OS but Win (not supported.)
