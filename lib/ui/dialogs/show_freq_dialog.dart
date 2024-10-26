@@ -398,7 +398,8 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
   final weights = [5, 7, 7, 9];
   final titles = ['Vinaya', 'Sutta', 'Abhidhamma', 'Aññā'];
 
-  debugPrint('topOffset: $topOffset');
+  debugPrint('topOffset: $topOffset, cellHeight=$cellHeight');
+
 
   return Row(
     mainAxisAlignment: MainAxisAlignment.start,
@@ -409,7 +410,7 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
         child: Table(
           children: weights.mapIndexed((index, weight) {
             final title = titles[index].split('').join('\n');
-            double bookHeight = weight * (cellHeight);
+            double bookHeight = weight * (cellHeight.floor() + borderWidth * 2) - borderWidth * 2;
             return TableRow(
               children: [
                 Container(
