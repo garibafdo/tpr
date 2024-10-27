@@ -1,43 +1,43 @@
 {
   "general": {
-    "message": "TPR Build 72 is available for Android, MSWin, Appimage.\n\nWhat's New?  Cloud Bookmarks, and Bookmark Folders.  Plus many bug fixes\nLatest PEU from January, 2024 ~78% edited.  \nSee video for release details on YouTube.  Access the youtube channel via the menu on the settings\n\nMay this dhammadāna be a cause for Nibbāna for the programmers and volunteers of this app and also for all beings and past relatives.",
+    "message": "TPR Build 82 is available for Android and Appimage.\n\nWhat's New?  DPD_Extras extensions\nNew fix for tabs that stop shifting of text.\nLatest PEU from October, 2024 that is 90% edited.  \n Extensions has folders now\n  Access the youtube channel via the menu on the settings\n\nMay this dhammadāna be a cause for Nibbāna for the programmers and volunteers of this app and also for all beings and past relatives.",
     "messageDate": "20240214",
-    "peuDate": "Jan, 2024",
-    "dpdDate": "Jan, 2024"
+    "peuDate": "Oct, 2024",
+    "dpdDate": "Oct, 2024"
   },
   "android": {
-    "currentVersion": "2.6.1+72",
+    "currentVersion": "2.6.5+82",
     "message": "Download in Play Store",
     "messageDate": "20240214",
-    "peuDate": "Jan, 2024",
-    "dpdDate": "Jan, 2024"
+    "peuDate": "Oct, 2024",
+    "dpdDate": "Oct, 2024"
   },
   "windows": {
-    "currentVersion": "2.6.1+72",
-    "message": "Download in MS App Store",
+    "currentVersion": "78",
+    "message": "Build 82 submitted awaiting MS Appstore approval",
     "messageDate": "20240214",
     "peuDate": "Jan, 2024",
     "dpdDate": "Jan, 2024"
   },
   "linux": {
-    "currentVersion": "2.6.1+72",
-    "message": "Appimage build 72  flathub is older",
+    "currentVersion": "2.6.5+82",
+    "message": "Appimage build 82  flathub is older",
     "messageDate": "20240214",
-    "peuDate": "Jan, 2024",
-    "dpdDate": "Jan, 2024"
+    "peuDate": "Oct, 2024",
+    "dpdDate": "Oct, 2024"
   },
   "ios": {
-    "currentVersion": "2.5.9+63",
-    "message": "Update in iOS App Store",
+    "currentVersion": "79",
+    "message": "Build 79",
     "messageDate": "20231130",
-    "peuDate": "November 2023",
-    "dpdDate": "July 31, 2023"
+    "peuDate": "Sept, 2024",
+    "dpdDate": "July, 2024"
   },
   "macos": {
-    "currentVersion": "2.5.9+62",
-    "message": "Update in MacOS App Store",
+    "currentVersion": "79",
+    "message": "Build 79",
     "messageDate": "20231130",
-    "peuDate": "November 2023",
-    "dpdDate": "July 31, 2023"
+    "peuDate": "Sept, 2024",
+    "dpdDate": "July, 2024"
   }
 }
