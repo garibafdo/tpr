@@ -70,6 +70,7 @@ showDeclensionDialog(BuildContext context, int wordId) async {
         .map((e) => (e as List).map((item) => item as String).toList())
         .toList();
 
+    final stem = inflection.stem.replaceAll(RegExp(r'[!*]'), '');
     return TableRow(
       children: row
           .asMap()
@@ -103,7 +104,7 @@ showDeclensionDialog(BuildContext context, int wordId) async {
                         color: getDpdHeaderColor())));
               } else if (value.isNotEmpty) {
                 spans.add(TextSpan(
-                    text: inflection.stem,
+                    text: stem,
                     style: TextStyle(
                         fontSize: Prefs.dictionaryFontSize.toDouble())));
                 spans.add(TextSpan(
