@@ -105,7 +105,7 @@ class ReaderViewController extends ChangeNotifier {
         _currentSearchResult.value = searchIndexes.length;
       }
       for (int i = 0; i < pageMatches; i++) {
-        searchIndexes.add(SearchIndex(index + 1, i));
+        searchIndexes.add(SearchIndex(book.firstPage + index, i));
       }
       totalResults += pageMatches;
     });
