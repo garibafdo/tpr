@@ -154,118 +154,137 @@ class _VerticalBookViewState extends State<VerticalBookView>
             IncreaseFontIntent: IncreaseFontAction(this, context),
             DecreaseFontIntent: DecreaseFontAction(this, context),
           },
-          child: Row(
+          child:
+          Stack(
             children: [
-              Expanded(
-                child: SelectionArea(
-                  contextMenuBuilder: (context, selectableRegionState) {
-                    return AdaptiveTextSelectionToolbar.buttonItems(
-                      anchors: selectableRegionState.contextMenuAnchors,
-                      buttonItems: [
-                        ...selectableRegionState.contextMenuButtonItems,
-                        ContextMenuButtonItem(
-                            onPressed: () {
-                              ContextMenuController.removeAny();
-                              widget.onSearchedSelectedText
-                                  ?.call(_selectedContent!.plainText);
-                            },
-                            label: 'Search'),
-                        ContextMenuButtonItem(
-                            onPressed: () {
-                              ContextMenuController.removeAny();
-                              widget.onSearchedInCurrentBook
-                                  ?.call(_selectedContent!.plainText);
-                            },
-                            label: 'Search in current'),
-                        ContextMenuButtonItem(
-                            onPressed: () {
-                              ContextMenuController.removeAny();
-                              widget.onSharedSelectedText
-                                  ?.call(_selectedContent!.plainText);
-                              // Share.share(_selectedContent!.plainText,
-                              //     subject: 'Pāḷi text from TPR');
-                            },
-                            label: 'Share'),
-                      ],
-                    );
-                  },
-                  onSelectionChanged: (value) {
-                    _selectedContent = value;
-                    widget.onSelectionChanged?.call(value?.plainText ?? '');
-                  },
-                  child: ScrollConfiguration(
-                      behavior: ScrollConfiguration.of(context)
-                          .copyWith(scrollbars: false),
-                      child: ScrollablePositionedList.builder(
-                        initialScrollIndex: pageIndex,
-                        itemScrollController: itemScrollController,
-                        itemPositionsListener: itemPositionsListener,
-                        scrollOffsetController: scrollOffsetController,
-                        scrollOffsetListener: scrollOffsetListener,
-                        addAutomaticKeepAlives: false,
-                        itemCount: readerViewController.pages.length,
-                        itemBuilder: (_, index) {
-                          final PageContent pageContent =
-                              readerViewController.pages[index];
-                          final script = context
-                              .read<ScriptLanguageProvider>()
-                              .currentScript;
-                          // transciption
+              Row(
+                children: [
+                  Expanded(
+                    child: SelectionArea(
+                      contextMenuBuilder: (context, selectableRegionState) {
+                        return AdaptiveTextSelectionToolbar.buttonItems(
+                          anchors: selectableRegionState.contextMenuAnchors,
+                          buttonItems: [
+                            ...selectableRegionState.contextMenuButtonItems,
+                            ContextMenuButtonItem(
+                                onPressed: () {
+                                  ContextMenuController.removeAny();
+                                  widget.onSearchedSelectedText
+                                      ?.call(_selectedContent!.plainText);
+                                },
+                                label: 'Search'),
+                            ContextMenuButtonItem(
+                                onPressed: () {
+                                  ContextMenuController.removeAny();
+                                  widget.onSearchedInCurrentBook
+                                      ?.call(_selectedContent!.plainText);
+                                },
+                                label: 'Search in current'),
+                            ContextMenuButtonItem(
+                                onPressed: () {
+                                  ContextMenuController.removeAny();
+                                  widget.onSharedSelectedText
+                                      ?.call(_selectedContent!.plainText);
+                                  // Share.share(_selectedContent!.plainText,
+                                  //     subject: 'Pāḷi text from TPR');
+                                },
+                                label: 'Share'),
+                          ],
+                        );
+                      },
+                      onSelectionChanged: (value) {
+                        _selectedContent = value;
+                        widget.onSelectionChanged?.call(value?.plainText ?? '');
+                      },
+                      child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context)
+                              .copyWith(scrollbars: false),
+                          child: ScrollablePositionedList.builder(
+                            initialScrollIndex: pageIndex,
+                            itemScrollController: itemScrollController,
+                            itemPositionsListener: itemPositionsListener,
+                            scrollOffsetController: scrollOffsetController,
+                            scrollOffsetListener: scrollOffsetListener,
+                            addAutomaticKeepAlives: false,
+                            itemCount: readerViewController.pages.length,
+                            itemBuilder: (_, index) {
+                              final PageContent pageContent =
+                                  readerViewController.pages[index];
+                              final script = context
+                                  .read<ScriptLanguageProvider>()
+                                  .currentScript;
+                              // transciption
 
-                          final id =
-                              '${readerViewController.book.name}-${readerViewController.book.id}-$index-$script';
+                              final id =
+                                  '${readerViewController.book.name}-${readerViewController.book.id}-$index-$script';
 
-                          final stopwatch = Stopwatch()..start();
-                          String htmlContent = PaliScript.getCachedScriptOf(
-                            script: script,
-                            romanText: pageContent.content,
-                            cacheId: id,
-                            isHtmlText: true,
-                          );
+                              final stopwatch = Stopwatch()..start();
+                              String htmlContent = PaliScript.getCachedScriptOf(
+                                script: script,
+                                romanText: pageContent.content,
+                                cacheId: id,
+                                isHtmlText: true,
+                              );
 
-                          return Padding(
-                            padding:
-                                index == readerViewController.pages.length - 1
+                              return Padding(
+                                padding: index ==
+                                        readerViewController.pages.length - 1
                                     ? const EdgeInsets.only(bottom: 100.0)
                                     : EdgeInsets.zero,
-                            child: PaliPageWidget(
-                              pageNumber: pageContent.pageNumber!,
-                              htmlContent: htmlContent,
-                              script: script,
-                              highlightedWord:
-                                  readerViewController.textToHighlight,
-                              searchText: searchText,
-                              pageToHighlight:
-                                  readerViewController.pageToHighlight,
-                              onClick: widget.onClickedWord,
-                              book: readerViewController.book,
-                            ),
-                          );
-                          // bookmarks: readerViewController.bookmarks,);
-                        },
-                      )),
+                                child: PaliPageWidget(
+                                  pageNumber: pageContent.pageNumber!,
+                                  htmlContent: htmlContent,
+                                  script: script,
+                                  highlightedWord:
+                                      readerViewController.textToHighlight,
+                                  searchText: searchText,
+                                  pageToHighlight:
+                                      readerViewController.pageToHighlight,
+                                  onClick: widget.onClickedWord,
+                                  book: readerViewController.book,
+                                ),
+                              );
+                              // bookmarks: readerViewController.bookmarks,);
+                            },
+                          )),
+                    ),
+                  ),
+                  PreferenceBuilder<bool>(
+                    preference: context
+                        .read<StreamingSharedPreferences>()
+                        .getBool(hideScrollbarPref, defaultValue: false),
+                    builder: (context, hideScrollbar) {
+                      if (!hideScrollbar) {
+                        return SizedBox(
+                          width: 32,
+                          height: constraints.maxHeight,
+                          child: const VerticalBookSlider(),
+                        );
+                      } else {
+                        return const SizedBox
+                            .shrink(); // Return an empty widget when hideScrollbar is true.
+                      }
+                    },
+                  ),
+                ],
+              ),
+              if (Prefs.multiTabMode) Positioned(
+                top: 5,
+                left: 5,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                  ),
+                  padding: const EdgeInsets.all(5),
+                  child: Text(
+                    readerViewController.book.name,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
                 ),
               ),
-              PreferenceBuilder<bool>(
-                preference: context
-                    .read<StreamingSharedPreferences>()
-                    .getBool(hideScrollbarPref, defaultValue: false),
-                builder: (context, hideScrollbar) {
-                  if (!hideScrollbar) {
-                    return SizedBox(
-                      width: 32,
-                      height: constraints.maxHeight,
-                      child: const VerticalBookSlider(),
-                    );
-                  } else {
-                    return const SizedBox
-                        .shrink(); // Return an empty widget when hideScrollbar is true.
-                  }
-                },
-              ),
             ],
-          ),
-        ),
+          ),),
       );
     });
   }
