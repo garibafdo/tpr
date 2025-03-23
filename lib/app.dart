@@ -41,16 +41,6 @@ final Logger myLogger = Logger(
   level: kDebugMode ? Level.all : Level.off,
 );
 
-class CloseAppIntent extends Intent {}
-
-class CloseAppAction extends Action<CloseAppIntent> {
-  @override
-  void invoke(CloseAppIntent intent) {
-    exit(0);
-  }
-}
-
-
 class App extends StatefulWidget {
   final StreamingSharedPreferences rxPref;
 
@@ -78,15 +68,15 @@ class _AppState extends State<App> {
   Widget build(BuildContext context) {
     final modKey =
         Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control;
-    return Shortcuts(
-        shortcuts: <LogicalKeySet, Intent>{
-          LogicalKeySet(modKey, LogicalKeyboardKey.keyQ): CloseAppIntent(),
+    return CallbackShortcuts(
+        bindings: {
+          SingleActivator(LogicalKeyboardKey.keyQ,
+              meta: Platform.isMacOS ? true : false,
+              control:
+              Platform.isWindows || Platform.isLinux ? true : false): () =>
+              exit(0)
         },
-        child: Actions(
-            actions: <Type, Action<Intent>>{
-              CloseAppIntent: CloseAppAction(),
-            },
-            child: MultiProvider(
+        child: MultiProvider(
               providers: [
                 Provider<StreamingSharedPreferences>.value(
                     value: widget.rxPref),
@@ -168,7 +158,7 @@ class _AppState extends State<App> {
                   ),
                 );
               },
-            )));
+            ));
   }
 
   Future<void> simulateFileOpen(BuildContext context) async {
