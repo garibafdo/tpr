@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:logger/logger.dart';
@@ -40,6 +41,16 @@ final Logger myLogger = Logger(
   level: kDebugMode ? Level.all : Level.off,
 );
 
+class CloseAppIntent extends Intent {}
+
+class CloseAppAction extends Action<CloseAppIntent> {
+  @override
+  void invoke(CloseAppIntent intent) {
+    exit(0);
+  }
+}
+
+
 class App extends StatefulWidget {
   final StreamingSharedPreferences rxPref;
 
@@ -51,6 +62,7 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   StreamSubscription? _sub;
+
   @override
   void initState() {
     super.initState();
@@ -64,84 +76,99 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        Provider<StreamingSharedPreferences>.value(value: widget.rxPref),
-        ChangeNotifierProvider<NavigationProvider>(
-            create: (_) => NavigationProvider()),
-        ChangeNotifierProvider<InitialSetupNotifier>(
-            create: (_) => InitialSetupNotifier()),
-        ChangeNotifierProvider<ThemeChangeNotifier>(
-            create: (_) => ThemeChangeNotifier()),
-        ChangeNotifierProvider<LocaleChangeNotifier>(
-            create: (_) => LocaleChangeNotifier()),
-        ChangeNotifierProvider<ScriptLanguageProvider>(
-            create: (_) => ScriptLanguageProvider()),
-        ChangeNotifierProvider<ReaderFontProvider>(
-            create: (_) => ReaderFontProvider()),
-        ChangeNotifierProvider<OpenningBooksProvider>(
-            create: (_) => OpenningBooksProvider()),
-        ChangeNotifierProvider<BookmarkPageViewModel>(
-          create: (_) => BookmarkPageViewModel(),
-          lazy: false,
-        ),
-        ChangeNotifierProvider<UserNotifier>(create: (_) => UserNotifier()),
-      ],
-      builder: (context, _) {
-        final themeChangeNotifier = context.watch<ThemeChangeNotifier>();
-        final localChangeNotifier = context.watch<LocaleChangeNotifier>();
-        final scriptChangeNotifier = context.watch<ScriptLanguageProvider>();
-
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          themeMode: themeChangeNotifier.themeMode,
-          theme: themeChangeNotifier.themeData,
-          darkTheme: themeChangeNotifier.darkTheme,
-          locale: Locale(localChangeNotifier.localeString, ''),
-          onGenerateRoute: RouteGenerator.generateRoute,
-          localizationsDelegates: const [
-            CcpMaterialLocalizations.delegate,
-            AppLocalizations.delegate,
-            ...GlobalMaterialLocalizations.delegates,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('en', ''), // English, no country code
-            Locale('my', ''), // Myanmar, no country code
-            Locale('si', ''), // Sinahala, no country code
-            Locale('zh', ''), // Chinese, no country code
-            Locale('vi', ''), // Vietnamese, no country code
-            Locale('hi', ''), // Hindi, no country code
-            Locale('ru', ''), // Russian, no country code
-            Locale('bn', ''), // Bengali, no country code
-            Locale('km', ''), // khmer, no country code
-            Locale('lo', ''), // Lao country code
-            Locale('ccp'), // Chakma, no country code
-            Locale('it', ''), // Italian, it
-            Locale('th', ''), // Italian, it
-          ],
-          home: FutureBuilder(
-            future: fetchMessageIfNeeded(),
-            builder:
-                (BuildContext context, AsyncSnapshot<TprMessage> snapshot) {
-              //simulateFileOpen(context);
-
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.hasData &&
-                    snapshot.data!.generalMessage.isNotEmpty) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    showWhatsNewDialog(context, snapshot.data!);
-                  });
-                }
-              }
-
-              return SplashScreen();
+    final modKey =
+        Platform.isMacOS ? LogicalKeyboardKey.meta : LogicalKeyboardKey.control;
+    return Shortcuts(
+        shortcuts: <LogicalKeySet, Intent>{
+          LogicalKeySet(modKey, LogicalKeyboardKey.keyQ): CloseAppIntent(),
+        },
+        child: Actions(
+            actions: <Type, Action<Intent>>{
+              CloseAppIntent: CloseAppAction(),
             },
-          ),
-        );
-      },
-    );
+            child: MultiProvider(
+              providers: [
+                Provider<StreamingSharedPreferences>.value(
+                    value: widget.rxPref),
+                ChangeNotifierProvider<NavigationProvider>(
+                    create: (_) => NavigationProvider()),
+                ChangeNotifierProvider<InitialSetupNotifier>(
+                    create: (_) => InitialSetupNotifier()),
+                ChangeNotifierProvider<ThemeChangeNotifier>(
+                    create: (_) => ThemeChangeNotifier()),
+                ChangeNotifierProvider<LocaleChangeNotifier>(
+                    create: (_) => LocaleChangeNotifier()),
+                ChangeNotifierProvider<ScriptLanguageProvider>(
+                    create: (_) => ScriptLanguageProvider()),
+                ChangeNotifierProvider<ReaderFontProvider>(
+                    create: (_) => ReaderFontProvider()),
+                ChangeNotifierProvider<OpenningBooksProvider>(
+                    create: (_) => OpenningBooksProvider()),
+                ChangeNotifierProvider<BookmarkPageViewModel>(
+                  create: (_) => BookmarkPageViewModel(),
+                  lazy: false,
+                ),
+                ChangeNotifierProvider<UserNotifier>(
+                    create: (_) => UserNotifier()),
+              ],
+              builder: (context, _) {
+                final themeChangeNotifier =
+                    context.watch<ThemeChangeNotifier>();
+                final localChangeNotifier =
+                    context.watch<LocaleChangeNotifier>();
+                final scriptChangeNotifier =
+                    context.watch<ScriptLanguageProvider>();
+
+                return MaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  themeMode: themeChangeNotifier.themeMode,
+                  theme: themeChangeNotifier.themeData,
+                  darkTheme: themeChangeNotifier.darkTheme,
+                  locale: Locale(localChangeNotifier.localeString, ''),
+                  onGenerateRoute: RouteGenerator.generateRoute,
+                  localizationsDelegates: const [
+                    CcpMaterialLocalizations.delegate,
+                    AppLocalizations.delegate,
+                    ...GlobalMaterialLocalizations.delegates,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  supportedLocales: const [
+                    Locale('en', ''), // English, no country code
+                    Locale('my', ''), // Myanmar, no country code
+                    Locale('si', ''), // Sinahala, no country code
+                    Locale('zh', ''), // Chinese, no country code
+                    Locale('vi', ''), // Vietnamese, no country code
+                    Locale('hi', ''), // Hindi, no country code
+                    Locale('ru', ''), // Russian, no country code
+                    Locale('bn', ''), // Bengali, no country code
+                    Locale('km', ''), // khmer, no country code
+                    Locale('lo', ''), // Lao country code
+                    Locale('ccp'), // Chakma, no country code
+                    Locale('it', ''), // Italian, it
+                    Locale('th', ''), // Italian, it
+                  ],
+                  home: FutureBuilder(
+                    future: fetchMessageIfNeeded(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<TprMessage> snapshot) {
+                      //simulateFileOpen(context);
+
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (snapshot.hasData &&
+                            snapshot.data!.generalMessage.isNotEmpty) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            showWhatsNewDialog(context, snapshot.data!);
+                          });
+                        }
+                      }
+
+                      return SplashScreen();
+                    },
+                  ),
+                );
+              },
+            )));
   }
 
   Future<void> simulateFileOpen(BuildContext context) async {

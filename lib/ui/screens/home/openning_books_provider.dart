@@ -29,6 +29,7 @@ class OpenningBooksProvider extends ChangeNotifier {
   }
 
   void remove({int? index}) {
+    if (_books.isEmpty) return;
     final indexToRemove = index ??= _selectedBookIndex;
     _books.removeAt(indexToRemove);
     if (Prefs.isNewTabAtEnd) {
