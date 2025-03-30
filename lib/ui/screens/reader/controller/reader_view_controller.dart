@@ -99,8 +99,15 @@ class ReaderViewController extends ChangeNotifier {
 
     var totalResults = 0;
     _currentSearchResult.value = -1;
+
+    // handles empty anchors like <a name="[ID]"></a>
+    final String regexPattern = RegExp.escape(text).replaceAll(' ', r'(?:\s*<a\s+name="[^"]*"></a>\s*|\s+)');
+    final RegExp regex = RegExp(regexPattern, caseSensitive: false);
+
     pages.forEachIndexed((index, page) {
-      final pageMatches = text.allMatches(page.content).length;
+      final matches = regex.allMatches(page.content);
+      final pageMatches = matches.length;
+
       if (index + 1 == _currentPage.value && _currentSearchResult.value == -1) {
         _currentSearchResult.value = searchIndexes.length;
       }

@@ -368,7 +368,7 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
     if (!Prefs.isShowAlternatePali) {
       content = _removeAlternatePali(content);
     }
-
+    content = _formatWithUserSetting(content);
     if (widget.searchText?.isNotEmpty == true) {
       var textToHighlight = PaliScript.getScriptOf(
           script: context.read<ScriptLanguageProvider>().currentScript,
@@ -377,7 +377,7 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
     }
     // content = _makeClickable(content, script);
     content = _changeToInlineStyle(content);
-    content = _formatWithUserSetting(content);
+
     return content;
   }
 
@@ -416,7 +416,8 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
     final bgColor = isDark ? '#2994ff' : '#a6d2ff';
 
     List<ReplaceResult> toReplace = [];
-    for (final node in (soup.body?.nodes ?? [])) {
+    final nodes = (soup.body?.nodes ?? []);
+    for (final node in nodes) {
       _highlightNode(node, textToHighlight, toReplace, textColor);
     }
 
