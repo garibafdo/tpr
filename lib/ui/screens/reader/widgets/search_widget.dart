@@ -65,6 +65,12 @@ class _SearchWidgetState extends State<SearchWidget> {
         readerViewController.search('');
       }
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      //
+      Focus.maybeOf(context)?.unfocus();
+      _focusNode.requestFocus();
+    });
   }
 
   @override
@@ -88,11 +94,6 @@ class _SearchWidgetState extends State<SearchWidget> {
     final textColor = _controller.value.text.length > 2
         ? baseColor
         : baseColor.withAlpha(100);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      //
-      Focus.maybeOf(context)?.unfocus();
-      _focusNode.requestFocus();
-    });
 
     return LayoutBuilder(
       builder: (_, BoxConstraints boxConstraints) {
