@@ -52,7 +52,7 @@ SELECT sutta_name as name, book_id, books.name as book_name,
 start_page as page_number, sutta_shortcut as shortcut
 from sutta_page_shortcut
 INNER JOIN books on books.id = sutta_page_shortcut.book_id 
-WHERE sutta_shortcut like '$filterdWord'
+WHERE sutta_shortcut like '$filterdWord%'
 ''');
       return results.map((e) => Sutta.fromMap(e)).toList();
     } else {

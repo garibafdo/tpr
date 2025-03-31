@@ -96,27 +96,58 @@ class _SuttaListDialogState extends State<SuttaListDialog> {
                       itemCount: suttas.length,
                       itemBuilder: (context, index) {
                         final sutta = suttas.elementAt(index);
-                        return ListTile(
-                          onTap: () => Navigator.pop(context, sutta),
-                          title: SubstringHighlight(
-                            term: getDisplayText(
-                              text: viewController.filter,
-                              script: selectedScript,
+
+                        // Original (Roman) title used for matching/highlighting
+                        final rawTitle = sutta.shortcut.isNotEmpty
+                            ? '[${sutta.shortcut}] ${sutta.name}'
+                            : sutta.name;
+
+                        // Translated display title (could be Sinhala, Burmese, etc.)
+                        final displayTitle = getDisplayText(
+                            text: rawTitle, script: selectedScript);
+
+                        // Ensure the search filter term matches the displayed script
+                        final displayFilter = getDisplayText(
+                            text: viewController.filter,
+                            script: selectedScript);
+
+                        final displaySubtitle = getDisplayText(
+                          text: '${sutta.bookName} • ${sutta.pageNumber}',
+                          script: selectedScript,
+                        );
+
+                        return Card(
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 2),
+                          elevation: 0.5,
+                          child: ListTile(
+                            minVerticalPadding: 6,
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 10),
+                            onTap: () => Navigator.pop(context, sutta),
+                            title: SubstringHighlight(
+                              text: displayTitle,
+                              term: displayFilter, // <-- crucial fix here
+                              textStyle:
+                                  Theme.of(context).textTheme.titleMedium!,
+                              textStyleHighlight: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(
+                                    color: Theme.of(context).primaryColor,
+                                    //fontWeight: FontWeight.bold,
+                                  ),
                             ),
-                            textStyleHighlight:
-                                const TextStyle(color: Colors.red),
-                            text: getDisplayText(
-                                text: '[${sutta.shortcut}] ${sutta.name}',
-                                script: selectedScript),
-                            textStyle: TextStyle(
-                              fontSize: 18.0,
-                              color: Theme.of(context).colorScheme.onBackground,
+                            subtitle: Text(
+                              displaySubtitle,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    color: Theme.of(context).hintColor,
+                                  ),
                             ),
                           ),
-                          subtitle: Text(getDisplayText(
-                            text: '${sutta.bookName} - ${sutta.pageNumber}',
-                            script: selectedScript,
-                          )),
                         );
                       },
                       separatorBuilder: (context, index) {
