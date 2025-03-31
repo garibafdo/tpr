@@ -216,6 +216,9 @@ class DatabaseHelper {
         'CREATE INDEX IF NOT EXISTS "dpr_stem_index" ON "dpr_stem" ("word"	ASC);');
     await dbInstance.execute(
         'CREATE INDEX IF NOT EXISTS "dpd_word_split_index" ON "dpd_word_split" ("word");');
+    await dbInstance.execute(
+      'CREATE INDEX IF NOT EXISTS "sutta_shortcut_index" ON "sutta_page_shortcut" ("book_id", "page_number");',
+    );
 
     return true;
   }

@@ -38,11 +38,21 @@ class SearchResultListTile extends StatelessWidget {
         script: context.read<ScriptLanguageProvider>().currentScript,
         romanText: result.pageNumber.toString());
 
-    final bookNameAndPageNumber =
-        '$bookName (${AppLocalizations.of(context)!.page} - $pageNumber)';
+    final bookNameAndPageNumber = bookName;
+    final suttaLine = result.suttaName != 'n/a'
+        ? '${result.suttaName!}, p. $pageNumber'
+        : '(p. $pageNumber)';
 
     final styelForBookName = TextStyle(
-        fontSize: Prefs.uiFontSize, color: Theme.of(context).primaryColor);
+        fontSize: Prefs.uiFontSize,
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).primaryColor);
+
+    final styleForSuttaName = TextStyle(
+      fontWeight: FontWeight.bold,
+      fontSize: Prefs.uiFontSize,
+      color: Theme.of(context).colorScheme.primary,
+    );
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: GestureDetector(
@@ -57,8 +67,13 @@ class SearchResultListTile extends StatelessWidget {
                 // book name and page number
                 Text(
                   bookNameAndPageNumber,
-                  textAlign: TextAlign.right,
+                  textAlign: TextAlign.center,
                   style: styelForBookName,
+                ),
+                Text(
+                  suttaLine,
+                  style: styleForSuttaName,
+                  textAlign: TextAlign.center,
                 ),
                 Divider(color: Theme.of(context).colorScheme.primary),
                 // description text

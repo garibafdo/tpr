@@ -6,11 +6,12 @@ class SearchResult {
   final Book book;
   final int pageNumber;
   final String description;
+  final String suttaName;
 
-  SearchResult({
-    required this.id,
-    required this.book,
-    required this.pageNumber,
-    required this.description,
-  });
+  SearchResult(
+      {required this.id,
+      required this.book,
+      required this.pageNumber,
+      required this.description,
+      required this.suttaName});
 }

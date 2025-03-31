@@ -26,16 +26,22 @@ class FtsDatabaseRepository implements FtsRespository {
     late String sql;
     if (queryMode == QueryMode.exact) {
       sql = '''
-      SELECT fts_pages.id, bookid, name, page, content
+      SELECT fts_pages.id, bookid, name, page, content, sutta_name
       FROM fts_pages INNER JOIN books ON fts_pages.bookid = books.id
+        LEFT JOIN sutta_page_shortcut
+            ON fts_pages.bookid = sutta_page_shortcut.book_id
+            AND fts_pages.page BETWEEN sutta_page_shortcut.start_page AND sutta_page_shortcut.end_page
       WHERE fts_pages MATCH '"$phrase"'
       ''';
     }
     if (queryMode == QueryMode.prefix) {
       final value = '$phrase '.replaceAll(' ', '* ').trim();
       sql = '''
-      SELECT fts_pages.id, bookid, name, page, content
+      SELECT fts_pages.id, bookid, name, page, content, sutta_name
       FROM fts_pages INNER JOIN books ON fts_pages.bookid = books.id
+        LEFT JOIN sutta_page_shortcut
+            ON fts_pages.bookid = sutta_page_shortcut.book_id
+            AND fts_pages.page BETWEEN sutta_page_shortcut.start_page AND sutta_page_shortcut.end_page
       WHERE fts_pages MATCH '"$value"'
       ''';
     }
@@ -46,17 +52,23 @@ class FtsDatabaseRepository implements FtsRespository {
           RegExp(r'([^\s]+)'), ((match) => '*${match.group(1)}*'));
       value = value.replaceAll(' ', ' NEAR/$wordDistance ');
       sql = '''
-      SELECT fts_pages.id, bookid, name, page,
+      SELECT fts_pages.id, bookid, name, page, sutta_name,
       SNIPPET(fts_pages, '<$highlightTagName>', '</$highlightTagName>', '',-15, 25) AS content
       FROM fts_pages INNER JOIN books ON fts_pages.bookid = books.id
+        LEFT JOIN sutta_page_shortcut
+            ON fts_pages.bookid = sutta_page_shortcut.book_id
+            AND fts_pages.page BETWEEN sutta_page_shortcut.start_page AND sutta_page_shortcut.end_page
       WHERE fts_pages MATCH "$value"
       ''';
     }
 
     if (queryMode == QueryMode.anywhere) {
       sql = '''
-      SELECT fts_pages.id, bookid, name, page, content
+      SELECT fts_pages.id, bookid, name, page, content, sutta_name
       FROM fts_pages INNER JOIN books ON fts_pages.bookid = books.id
+        LEFT JOIN sutta_page_shortcut
+            ON fts_pages.bookid = sutta_page_shortcut.book_id
+            AND fts_pages.page BETWEEN sutta_page_shortcut.start_page AND sutta_page_shortcut.end_page
       WHERE content LIKE '%$phrase%'
       ''';
     }
@@ -83,11 +95,14 @@ class FtsDatabaseRepository implements FtsRespository {
       }
 
       if (queryMode == QueryMode.distance) {
+        final suttaName = (element['sutta_name'] as String?) ?? 'n/a';
+
         final SearchResult searchResult = SearchResult(
           id: id,
           book: Book(id: bookId, name: bookName),
           pageNumber: pageNumber,
           description: content,
+          suttaName: suttaName,
         );
         results.add(searchResult);
       } else if (queryMode == QueryMode.exact ||
@@ -101,11 +116,14 @@ class FtsDatabaseRepository implements FtsRespository {
         if (matches.length == 1) {
           final String description = _extractDescription(
               content, matches.first.start, matches.first.end);
+          final suttaName = (element['sutta_name'] as String?) ?? 'n/a';
+
           final SearchResult searchResult = SearchResult(
             id: id,
             book: Book(id: bookId, name: bookName),
             pageNumber: pageNumber,
             description: description,
+            suttaName: suttaName,
           );
           results.add(searchResult);
         } else {
@@ -114,11 +132,14 @@ class FtsDatabaseRepository implements FtsRespository {
             final current = matches.elementAt(i);
             final String description =
                 _extractDescription(content, current.start, current.end);
+            final suttaName = (element['sutta_name'] as String?) ?? 'n/a';
+
             final SearchResult searchResult = SearchResult(
               id: id,
               book: Book(id: bookId, name: bookName),
               pageNumber: pageNumber,
               description: description,
+              suttaName: suttaName,
             );
             results.add(searchResult);
           }
