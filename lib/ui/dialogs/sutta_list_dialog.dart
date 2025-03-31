@@ -106,7 +106,8 @@ class _SuttaListDialogState extends State<SuttaListDialog> {
                             textStyleHighlight:
                                 const TextStyle(color: Colors.red),
                             text: getDisplayText(
-                                text: sutta.name, script: selectedScript),
+                                text: '[${sutta.shortcut}] ${sutta.name}',
+                                script: selectedScript),
                             textStyle: TextStyle(
                               fontSize: 18.0,
                               color: Theme.of(context).colorScheme.onBackground,

@@ -3,12 +3,13 @@ class Sutta {
   final String bookID;
   final String bookName;
   final int pageNumber;
-  Sutta({
-    required this.name,
-    required this.bookID,
-    required this.bookName,
-    required this.pageNumber,
-  });
+  final String shortcut;
+  Sutta(
+      {required this.name,
+      required this.bookID,
+      required this.bookName,
+      required this.pageNumber,
+      this.shortcut = ''});
 
   Map<String, dynamic> toMap() {
     return {
@@ -16,6 +17,7 @@ class Sutta {
       'bookID': bookID,
       'bookName': bookName,
       'pageNumber': pageNumber,
+      'shortcut': shortcut
     };
   }
 
@@ -25,6 +27,7 @@ class Sutta {
       bookID: map['book_id'] ?? '',
       bookName: map['book_name'] ?? '',
       pageNumber: map['page_number']?.toInt() ?? 0,
+      shortcut: map['shortcut'] ?? '',
     );
   }
 
@@ -40,10 +43,15 @@ class Sutta {
         other.name == name &&
         other.bookID == bookID &&
         other.bookName == bookName &&
-        other.pageNumber == pageNumber;
+        other.pageNumber == pageNumber &&
+        other.shortcut == shortcut;
   }
 
   @override
   int get hashCode =>
-      name.hashCode ^ bookID.hashCode ^ bookName.hashCode ^ pageNumber.hashCode;
+      name.hashCode ^
+      bookID.hashCode ^
+      bookName.hashCode ^
+      pageNumber.hashCode ^
+      shortcut.hashCode;
 }

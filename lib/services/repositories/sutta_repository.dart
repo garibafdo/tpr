@@ -1,8 +1,4 @@
 import 'package:tipitaka_pali/business_logic/models/sutta.dart';
-import 'package:tipitaka_pali/services/repositories/paragraph_repo.dart';
-
-import '../../business_logic/models/book.dart';
-import '../../business_logic/models/quick_jump.dart';
 import '../database/database_helper.dart';
 import '../prefs.dart';
 
@@ -31,6 +27,7 @@ class SuttaRepositoryDatabase implements SuttaRepository {
     "thag": "mula_ku_08",
     "thig": "mula_ku_09",
   };
+  final reNikaya = RegExp(r'^(DN|MN|SN|AN|Dhp|Vin)', caseSensitive: false);
 
   SuttaRepositoryDatabase(this.databaseProvider);
 
@@ -48,37 +45,14 @@ INNER JOIN books on books.id = suttas.book_id
   Future<List<Sutta>> getSuttas(String filterdWord) async {
     final db = await databaseProvider.database;
 
-    Book book = Book(id: "", name: "");
-
-    if (filterdWord.contains(RegExp(r'[0-9]'))) {
-      String bookKey = getBookKey(filterdWord);
-      //check now to see if it is a quickjump
-      if (filterdWord.toLowerCase().contains("dn")) {
-        book = getDnBookDetails(filterdWord, book); // get the number
-      }
-      if (filterdWord.toLowerCase().contains("mn")) {
-        book = getMnBookDetails(filterdWord, book); // get the number
-      }
-      if (filterdWord.toLowerCase().contains("sn")) {
-        final snFormat = RegExp(r'^sn\d+\.\d+$');
-        if (snFormat.hasMatch(filterdWord)) {
-          book = await getSnBookDetails(filterdWord, book);
-        } // get the number
-      }
-      if (filterdWord.toLowerCase().contains("an")) {
-        final anFormat = RegExp(r'^an\d+\.\d+$');
-        if (anFormat.hasMatch(filterdWord)) {
-          book = await getAnBookDetails(filterdWord, book); // get the number
-        }
-      }
-      if (bookKey.isNotEmpty) {
-        return handleBook(filterdWord);
-      }
-
+    if (reNikaya.hasMatch(filterdWord) &&
+        filterdWord.contains(RegExp(r'\d+'))) {
       var results = await db.rawQuery('''
-SELECT suttas.name, book_id, books.name as book_name, page_number from suttas
-INNER JOIN books on books.id = suttas.book_id 
-WHERE suttas.page_number = '${book.firstPage}' AND suttas.book_id = '${book.id}'
+SELECT sutta_name as name, book_id, books.name as book_name,
+start_page as page_number, sutta_shortcut as shortcut
+from sutta_page_shortcut
+INNER JOIN books on books.id = sutta_page_shortcut.book_id 
+WHERE sutta_shortcut like '$filterdWord'
 ''');
       return results.map((e) => Sutta.fromMap(e)).toList();
     } else {
@@ -113,7 +87,7 @@ WHERE suttas.name LIKE '%$filterdWord%'
       }
     }
   }
-
+/*
   Future<void> makeSNQuickjumpTable() async {
     List<int> numSuttas = [
       81,
@@ -1069,7 +1043,7 @@ WHERE suttas.name LIKE '%$filterdWord%'
     return suttas;
   }
 
-  String getBookKey(String filterdWord) {
+String getBookKey(String filterdWord) {
     for (String book in qjbooks.keys) {
       if (filterdWord.toLowerCase().contains(book)) {
         return book;
@@ -1077,4 +1051,5 @@ WHERE suttas.name LIKE '%$filterdWord%'
     }
     return "";
   }
+  */
 }
