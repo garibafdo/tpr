@@ -34,6 +34,7 @@ class SuttaListDialogViewController {
       _filter = '';
     } else {
       _suttas.value = await suttaRepository.getSuttas(filter);
+      _filter = filter;
     }
   }
 }
