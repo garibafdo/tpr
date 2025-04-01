@@ -2,7 +2,7 @@ const String highlightTagName = 'highlight';
 
 class DatabaseInfo {
   DatabaseInfo._();
-  static const int version = 49;
+  static const int version = 50;
   static const String fileName = 'tipitaka_pali.db';
 }
 
@@ -28,7 +28,7 @@ class AssetsFile {
   ];
 }
 
-const double navigationBarWidth = 48;
+const double navigationBarWidth = 50;
 
 const String kdartTheme = 'default_dark_theme';
 const String kblackTheme = 'black';
