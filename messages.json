@@ -1,30 +1,30 @@
 {
   "general": {
-    "message": "TPR Build 82 is available for Android and Appimage.\n\nWhat's New?  DPD_Extras extensions\nNew fix for tabs that stop shifting of text.\nLatest PEU from October, 2024 that is 90% edited.  \n Extensions has folders now\n  Access the youtube channel via the menu on the settings\n\nMay this dhammadāna be a cause for Nibbāna for the programmers and volunteers of this app and also for all beings and past relatives.",
-    "messageDate": "20240214",
-    "peuDate": "Oct, 2024",
-    "dpdDate": "Oct, 2024"
+    "message": "TPR Build 84 is available for Android, Windows and Linux (apple is delayed).\n\nWhat's New? Search shows sutta names in the search results.\nLatest DPD and PEU from March, 2025.  \n\nMay this dhammadāna be a cause for Nibbāna for the programmers and volunteers of this app and also for all beings and past relatives.",
+    "messageDate": "20250401",
+    "peuDate": "March, 2025",
+    "dpdDate": "March, 2025"
   },
   "android": {
-    "currentVersion": "2.6.5+82",
-    "message": "Download in Play Store",
-    "messageDate": "20240214",
-    "peuDate": "Oct, 2024",
-    "dpdDate": "Oct, 2024"
+    "currentVersion": "2.6.7+84",
+    "message": "Download in the Play Store",
+    "messageDate": "20250401",
+    "peuDate": "March, 2025",
+    "dpdDate": "March, 2025"
   },
   "windows": {
-    "currentVersion": "78",
-    "message": "Build 82 submitted awaiting MS Appstore approval",
-    "messageDate": "20240214",
-    "peuDate": "Jan, 2024",
-    "dpdDate": "Jan, 2024"
+    "currentVersion": "2.6.7+84",
+    "message": "Build 84 in MS App Store and github repo as exe",
+    "messageDate": "20250401",
+    "peuDate": "March, 2025",
+    "dpdDate": "March, 2025"
   },
   "linux": {
-    "currentVersion": "2.6.5+82",
-    "message": "Appimage build 82  flathub is older",
-    "messageDate": "20240214",
-    "peuDate": "Oct, 2024",
-    "dpdDate": "Oct, 2024"
+    "currentVersion": "2.6.7+84",
+    "message": "Appimage build 84  Appimage and Flatpak",
+    "messageDate": "20250401",
+    "peuDate": "March, 2025",
+    "dpdDate": "March, 2025"
   },
   "ios": {
     "currentVersion": "79",
