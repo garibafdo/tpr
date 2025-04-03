@@ -5,8 +5,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tipitaka_pali/utils/simple_encryptor.dart';
 
 import '../data/constants.dart';
+
+// for ai models
+const Map<String, String> openRouterModelLabels = {
+  'google/gemini-flash-1.5-8b-exp': 'Gemini Flash 1.5',
+  'google/gemini-2.5-pro-exp-03-25:free': 'Gemini Pro 2.5',
+  'deepseek/deepseek-chat-v3-0324:free': 'DeepSeek Chat V3',
+  'nvidia/llama-3.1-nemotron-70b-instruct:free': 'Nvidia Llama 3.1',
+  'openai/chatgpt-4o-latest': '\$\$ Current 4o',
+  'openai/gpt-4o-2024-08-06': '\$ Nov-2024 Gpt 4o'
+};
 
 // preference names
 const String localeValPref = "localeVal";
@@ -65,6 +76,9 @@ const String hideScrollbarPref = 'hideScrollbar';
 const String hideIPAPref = 'hideIPA';
 const String hideSanskritPref = 'hideSanskrit';
 const String panelWidthKey = 'panelWidth';
+const String openRouterApiKeyPref = "openRouterApiKey";
+const String openRouterPromptPref = 'openRouterPrompt';
+const String openRouterModelPref = 'openRouterModel';
 
 // default pref values
 const int defaultLocaleVal = 0;
@@ -123,6 +137,14 @@ const bool defaultHideScrollbar = false;
 const bool defaultHideIPA = true;
 const bool defaultHideSanskrit = true;
 const double defaultPanelWidth = 350;
+const String defaultOpenRouterApiKey = "";
+const String defaultOpenRouterPrompt = """
+Translate the following Pāḷi into clean, readable HTML.
+Translate sentence by sentence.
+Use <b> for Pāḷi line and <br> to separate lines. Normal text for English. Do not translate common terms like Nibbāna, mettā, or dukkha.
+Output only HTML. Do not explain.
+""";
+const String defaultOpenRouterModel = "google/gemini-2.5-pro-exp-03-25:free";
 
 List<String> defaultSelectedMainCategoryFilters = [
   "mula",
@@ -403,6 +425,31 @@ class Prefs {
   static set hideSanskrit(bool value) =>
       instance.setBool(hideSanskritPref, value);
 
+// openRouter ai stuff
+// encrypted is hidden from other callers.
+  static String get openRouterApiKey {
+    final encrypted = instance.getString(openRouterApiKeyPref);
+    if (encrypted == null || encrypted.isEmpty) return '';
+    return SimpleEncryptor("ai_secret_key_2025").decryptText(encrypted);
+  }
+
+  static set openRouterApiKey(String value) {
+    final encrypted = SimpleEncryptor("ai_secret_key_2025").encryptText(value);
+    instance.setString(openRouterApiKeyPref, encrypted);
+  }
+
+  static String get openRouterPrompt =>
+      instance.getString(openRouterPromptPref) ?? defaultOpenRouterPrompt;
+
+  static set openRouterPrompt(String value) =>
+      instance.setString(openRouterPromptPref, value);
+
+  static String get openRouterModel =>
+      instance.getString(openRouterModelPref) ?? defaultOpenRouterModel;
+
+  static set openRouterModel(String value) =>
+      instance.setString(openRouterModelPref, value);
+
   // ===========================================================================
   // Helpers
 
@@ -433,6 +480,8 @@ class Prefs {
   static set bookViewModeIndex(int value) =>
       instance.setInt(keyBookViewModeIndex, value);
 
-      static double get panelWidth => instance.getDouble(panelWidthKey) ?? defaultPanelWidth;
-  static set panelWidth(double value) => instance.setDouble(panelWidthKey, value);
+  static double get panelWidth =>
+      instance.getDouble(panelWidthKey) ?? defaultPanelWidth;
+  static set panelWidth(double value) =>
+      instance.setDouble(panelWidthKey, value);
 }

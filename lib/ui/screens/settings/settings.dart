@@ -9,6 +9,7 @@ import 'package:tipitaka_pali/ui/screens/settings/tools_settings.dart';
 import 'package:tipitaka_pali/ui/widgets/select_dictionary_widget.dart';
 import 'package:tipitaka_pali/ui/widgets/select_language_widget.dart';
 import 'package:tipitaka_pali/ui/screens/settings/dpd_settings_view.dart';
+import 'package:tipitaka_pali/ui/screens/settings/ai_settings_view.dart';
 
 import 'general_settings_view.dart';
 import 'help_about.dart';
@@ -44,6 +45,7 @@ class SettingPage extends StatelessWidget {
                 create: (context) => BookmarkNotifier(),
                 child: const SyncSettingsView(),
               ),
+              const AiSettingsView(),
               ToolsSettingsView(scrollController: sc),
             ],
           ),

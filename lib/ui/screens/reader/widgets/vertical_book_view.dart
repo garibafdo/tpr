@@ -23,11 +23,13 @@ class VerticalBookView extends StatefulWidget {
       this.onSharedSelectedText,
       this.onClickedWord,
       this.onSearchedInCurrentBook,
+      this.onOpenRouterTranslateSelected,
       this.onSelectionChanged});
   final ValueChanged<String>? onSearchedSelectedText;
   final ValueChanged<String>? onSharedSelectedText;
   final ValueChanged<String>? onClickedWord;
   final ValueChanged<String>? onSearchedInCurrentBook;
+  final ValueChanged<String>? onOpenRouterTranslateSelected;
   final ValueChanged<String>? onSelectionChanged;
 
   @override
@@ -154,8 +156,7 @@ class _VerticalBookViewState extends State<VerticalBookView>
             IncreaseFontIntent: IncreaseFontAction(this, context),
             DecreaseFontIntent: DecreaseFontAction(this, context),
           },
-          child:
-          Stack(
+          child: Stack(
             children: [
               Row(
                 children: [
@@ -180,6 +181,18 @@ class _VerticalBookViewState extends State<VerticalBookView>
                                       ?.call(_selectedContent!.plainText);
                                 },
                                 label: 'Search in current'),
+                            ContextMenuButtonItem(
+                                onPressed: () {
+                                  ContextMenuController.removeAny();
+                                  final fullText =
+                                      _selectedContent?.plainText ?? '';
+                                  //final trimmed = fullText.length > 1800
+                                  //  ? fullText.substring(0, 1800)
+                                  //: fullText;
+                                  widget.onOpenRouterTranslateSelected
+                                      ?.call(fullText);
+                                },
+                                label: 'AI Translate'),
                             ContextMenuButtonItem(
                                 onPressed: () {
                                   ContextMenuController.removeAny();
@@ -268,23 +281,25 @@ class _VerticalBookViewState extends State<VerticalBookView>
                   ),
                 ],
               ),
-              if (Prefs.multiTabMode) Positioned(
-                top: 5,
-                left: 5,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor,
-                    borderRadius: const BorderRadius.all(Radius.circular(5)),
-                  ),
-                  padding: const EdgeInsets.all(5),
-                  child: Text(
-                    readerViewController.book.name,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+              if (Prefs.multiTabMode)
+                Positioned(
+                  top: 5,
+                  left: 5,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: const BorderRadius.all(Radius.circular(5)),
+                    ),
+                    padding: const EdgeInsets.all(5),
+                    child: Text(
+                      readerViewController.book.name,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
                   ),
                 ),
-              ),
             ],
-          ),),
+          ),
+        ),
       );
     });
   }
