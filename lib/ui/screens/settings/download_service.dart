@@ -60,9 +60,9 @@ class DownloadService {
     return s;
   }
 
-  Future<void> downloadZip() async {
-    var zippedFile = await downloadFile(_zipPath, _localZipFileName);
-    await unarchiveAndSave(zippedFile);
+  Future<List<File>> downloadZip() async {
+    final zippedFile = await downloadFile(_zipPath, _localZipFileName);
+    return await unarchiveAndSave(zippedFile);
   }
 
   Future<void> installSqlZip() async {
@@ -70,12 +70,14 @@ class DownloadService {
     downloadNotifier.connectionChecking = false;
     downloadNotifier.downloading = true;
     downloadNotifier.message =
-        "\nNow downlading file.. ${downloadListItem.size}\nPlease Wait.";
-    // now read a file
+        "\nNow downloading file.. ${downloadListItem.size}\nPlease wait.";
 
-    await downloadZip();
-    final downloadedFile = await _localFile;
-    await processLocalFile(downloadedFile);
+    final sqlFiles = await downloadZip();
+
+    for (final sqlFile in sqlFiles) {
+      await processLocalFile(sqlFile);
+    }
+
     downloadNotifier.downloading = false;
   }
 
@@ -320,21 +322,28 @@ class DownloadService {
     _dir = Prefs.databaseDirPath;
   }
 
-  Future<void> unarchiveAndSave(var zippedFile) async {
+  Future<List<File>> unarchiveAndSave(File zippedFile) async {
     var bytes = zippedFile.readAsBytesSync();
     var archive = ZipDecoder().decodeBytes(bytes);
+    List<File> extractedSqlFiles = [];
+
     for (var file in archive) {
-      var fileName = '$_dir/${file.name}';
-      debugPrint("fileName $fileName");
-      downloadNotifier.message += "\nExtracting filename = $fileName\n";
-      if (file.isFile && !fileName.contains("__MACOSX")) {
-        var outFile = File(fileName);
-        outFile = await outFile.create(recursive: true);
-        await outFile.writeAsBytes(file.content);
+      final outPath = '$_dir/${file.name}';
+      if (!file.isFile || outPath.contains('__MACOSX')) continue;
+
+      final outFile = File(outPath);
+      await outFile.create(recursive: true);
+      await outFile.writeAsBytes(file.content);
+
+      if (outFile.path.endsWith('.sql')) {
+        extractedSqlFiles.add(outFile);
       }
     }
+
     downloadNotifier.message =
-        "\nDownloaded ${archive.length} files.  \nPlease wait for further processing";
+        "\nDownloaded ${extractedSqlFiles.length} .sql files.\nPlease wait for further processing";
+
+    return extractedSqlFiles;
   }
 
   String _cleanText(String text) {
