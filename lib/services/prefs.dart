@@ -79,6 +79,9 @@ const String panelWidthKey = 'panelWidth';
 const String openRouterApiKeyPref = "openRouterApiKey";
 const String openRouterPromptPref = 'openRouterPrompt';
 const String openRouterModelPref = 'openRouterModel';
+const String openRouterPromptKeyPref = 'openRouterPromptKey';
+const String useGeminiDirectPref = 'useGeminiDirect';
+const String geminiDirectApiKeyPref = 'geminiDirectApiKey';
 
 // default pref values
 const int defaultLocaleVal = 0;
@@ -137,6 +140,7 @@ const bool defaultHideScrollbar = false;
 const bool defaultHideIPA = true;
 const bool defaultHideSanskrit = true;
 const double defaultPanelWidth = 350;
+const String defaultOpenRouterPromptKey = 'line_by_line';
 const String defaultOpenRouterApiKey = "";
 const String defaultOpenRouterPrompt = """
 Translate the following Pāḷi into clean, readable HTML.
@@ -449,6 +453,22 @@ class Prefs {
 
   static set openRouterModel(String value) =>
       instance.setString(openRouterModelPref, value);
+
+  static String get openRouterPromptKey =>
+      instance.getString(openRouterPromptKeyPref) ?? defaultOpenRouterPromptKey;
+
+  static set openRouterPromptKey(String value) =>
+      instance.setString(openRouterPromptKeyPref, value);
+
+  static bool get useGeminiDirect =>
+      instance.getBool(useGeminiDirectPref) ?? false;
+  static set useGeminiDirect(bool value) =>
+      instance.setBool(useGeminiDirectPref, value);
+
+  static String get geminiDirectApiKey =>
+      instance.getString(geminiDirectApiKeyPref) ?? '';
+  static set geminiDirectApiKey(String value) =>
+      instance.setString(geminiDirectApiKeyPref, value);
 
   // ===========================================================================
   // Helpers

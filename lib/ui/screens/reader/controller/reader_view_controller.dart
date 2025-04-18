@@ -21,6 +21,9 @@ import '../../../../services/repositories/recent_repo.dart';
 import '../../home/openning_books_provider.dart';
 
 class ReaderViewController extends ChangeNotifier {
+  final aiTranslationHtml = ValueNotifier<String?>(null);
+  final ValueNotifier<bool> isTranslating = ValueNotifier(false);
+
   bool _mounted = true;
   bool get mounted => _mounted;
 
@@ -101,7 +104,8 @@ class ReaderViewController extends ChangeNotifier {
     _currentSearchResult.value = -1;
 
     // handles empty anchors like <a name="[ID]"></a>
-    final String regexPattern = RegExp.escape(text).replaceAll(' ', r'(?:\s*<a\s+name="[^"]*"></a>\s*|\s+)');
+    final String regexPattern = RegExp.escape(text)
+        .replaceAll(' ', r'(?:\s*<a\s+name="[^"]*"></a>\s*|\s+)');
     final RegExp regex = RegExp(regexPattern, caseSensitive: false);
 
     pages.forEachIndexed((index, page) {

@@ -8,6 +8,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:sqflite_common/sqflite.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AiSettingsView extends StatefulWidget {
   const AiSettingsView({super.key});
@@ -20,6 +21,7 @@ class _AiSettingsViewState extends State<AiSettingsView> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _apiKeyController;
   late final TextEditingController _promptController;
+  late final TextEditingController _geminiKeyController;
 
   Map<String, String> _modelLabels = {};
   String? _selectedModel;
@@ -29,6 +31,9 @@ class _AiSettingsViewState extends State<AiSettingsView> {
     super.initState();
     _apiKeyController = TextEditingController(text: Prefs.openRouterApiKey);
     _promptController = TextEditingController(text: Prefs.openRouterPrompt);
+    _geminiKeyController =
+        TextEditingController(text: Prefs.geminiDirectApiKey);
+
     _loadModels();
   }
 
@@ -100,7 +105,8 @@ class _AiSettingsViewState extends State<AiSettingsView> {
                 : null;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Model list updated from GitHub.')),
+            SnackBar(
+                content: Text(AppLocalizations.of(context)!.updateModelList)),
           );
         }
       } else {
@@ -109,54 +115,44 @@ class _AiSettingsViewState extends State<AiSettingsView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update model list: $e')),
+          SnackBar(
+              content:
+                  Text('${AppLocalizations.of(context)!.updateModelList}: $e')),
         );
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _apiKeyController.dispose();
-    _promptController.dispose();
-    super.dispose();
   }
 
   void _showHelpDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('How to Get an OpenRouter API Key'),
-        content: const SingleChildScrollView(
+        title: Text(AppLocalizations.of(context)!.howToGetApiKey),
+        content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                  'To use AI translation, you need a free API key from OpenRouter.ai.'),
-              SizedBox(height: 12),
-              Text(
-                  '• Visit the OpenRouter website and sign up for an account.'),
-              Text('• Once logged in, you can get your API key.'),
-              SizedBox(height: 12),
-              Text(
-                  '💡 Models with a dollar sign (e.g., \$7.22) require payment.'),
-              Text(
-                  '• The \$7 model costs about 0.0014 USD per 100 words (~7,000 words per dollar).'),
-              Text(
-                  '• The \$3 model costs about 0.0007 USD per 100 words (~14,000 words per dollar).'),
-              SizedBox(height: 12),
-              Text('Use free models like Gemini Flash, DeepSeek, etc.'),
+              Text(AppLocalizations.of(context)!.apiKeyInstructions1),
+              const SizedBox(height: 12),
+              Text(AppLocalizations.of(context)!.apiKeyInstructions2),
+              Text(AppLocalizations.of(context)!.apiKeyInstructions3),
+              const SizedBox(height: 12),
+              Text(AppLocalizations.of(context)!.apiKeyInstructions4),
+              Text(AppLocalizations.of(context)!.apiKeyInstructions5),
+              Text(AppLocalizations.of(context)!.apiKeyInstructions6),
+              const SizedBox(height: 12),
+              Text(AppLocalizations.of(context)!.apiKeyInstructions7),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Close'),
+            child: Text(AppLocalizations.of(context)!.close),
           ),
           ElevatedButton(
-            child: const Text('Get Key'),
+            child: Text(AppLocalizations.of(context)!.getKey),
             onPressed: () async {
               final url = Uri.parse('https://openrouter.ai');
               if (await canLaunchUrl(url)) {
@@ -170,12 +166,36 @@ class _AiSettingsViewState extends State<AiSettingsView> {
   }
 
   @override
+  void dispose() {
+    _apiKeyController.dispose();
+    _promptController.dispose();
+    _geminiKeyController.dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final promptOptions = {
+      'line_by_line': AppLocalizations.of(context)!.translatePaliLineByLine,
+      'translate': AppLocalizations.of(context)!.translatePali,
+      'grammar': AppLocalizations.of(context)!.explainGrammar,
+      'summarize': AppLocalizations.of(context)!.summarize,
+    };
+
+    final promptValues = {
+      'line_by_line':
+          AppLocalizations.of(context)!.translatePaliLineByLinePrompt,
+      'translate': AppLocalizations.of(context)!.translatePaliPrompt,
+      'grammar': AppLocalizations.of(context)!.explainGrammarPrompt,
+      'summarize': AppLocalizations.of(context)!.summarizePrompt,
+    };
+
     return Card(
       child: ExpansionTile(
         leading: const Icon(Icons.psychology),
         title: Text(
-          'AI Settings',
+          AppLocalizations.of(context)!.aiSettings,
           style: Theme.of(context).textTheme.titleLarge,
         ),
         children: [
@@ -186,31 +206,62 @@ class _AiSettingsViewState extends State<AiSettingsView> {
               key: _formKey,
               child: Column(
                 children: [
+                  SwitchListTile(
+                    title: const Text("OpenRouter / Gemini Direct"),
+                    value: Prefs.useGeminiDirect,
+                    onChanged: (val) {
+                      setState(() {
+                        Prefs.useGeminiDirect = val;
+                      });
+                    },
+                  ),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Left column: OpenRouter + Gemini keys stacked
                       Expanded(
-                        child: TextFormField(
-                          controller: _apiKeyController,
-                          decoration: const InputDecoration(
-                            labelText: 'OpenRouter API Key',
-                          ),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            if (!Prefs.useGeminiDirect)
+                              TextFormField(
+                                controller: _apiKeyController,
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)!
+                                      .openRouterAiKey,
+                                ),
+                              ),
+                            if (Prefs.useGeminiDirect)
+                              TextFormField(
+                                controller: _geminiKeyController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Gemini API Key (direct)',
+                                ),
+                              ),
+                          ],
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      // Right column: buttons stacked
                       Column(
                         children: [
                           TextButton.icon(
-                            label: const Text('Key ?'),
                             icon: const Icon(Icons.help_outline),
+                            label: Text(AppLocalizations.of(context)!.key),
                             onPressed: () => _showHelpDialog(context),
                           ),
                           TextButton.icon(
                             icon: const Icon(Icons.save),
-                            label: const Text('Save'),
+                            label: Text(AppLocalizations.of(context)!.save),
                             onPressed: () {
                               Prefs.openRouterApiKey = _apiKeyController.text;
+                              Prefs.geminiDirectApiKey =
+                                  _geminiKeyController.text;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('API Key saved')),
+                                SnackBar(
+                                  content: Text(AppLocalizations.of(context)!
+                                      .openRouterKeySaved),
+                                ),
                               );
                             },
                           ),
@@ -219,45 +270,61 @@ class _AiSettingsViewState extends State<AiSettingsView> {
                     ],
                   ),
                   const SizedBox(height: 24.0),
-                  DropdownButtonFormField<String>(
-                    value: _selectedModel,
-                    decoration: const InputDecoration(
-                      labelText: 'OpenRouter Model',
+                  if (!Prefs.useGeminiDirect)
+                    DropdownButtonFormField<String>(
+                      value: _selectedModel,
+                      decoration: InputDecoration(
+                        labelText:
+                            AppLocalizations.of(context)!.openRouterAiModel,
+                      ),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedModel = value;
+                            Prefs.openRouterModel = value;
+                          });
+                        }
+                      },
+                      items: _modelLabels.entries.map((entry) {
+                        return DropdownMenuItem(
+                          value: entry.key,
+                          child: Text(entry.value,
+                              overflow: TextOverflow.ellipsis),
+                        );
+                      }).toList(),
                     ),
-                    onChanged: (value) {
-                      if (value != null) {
+                  const SizedBox(height: 16.0),
+                  DropdownButtonFormField<String>(
+                    value: Prefs.openRouterPromptKey, // e.g., "translate"
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.chooseAiPrompt,
+                    ),
+                    onChanged: (String? key) {
+                      if (key != null) {
                         setState(() {
-                          _selectedModel = value;
-                          Prefs.openRouterModel = value;
+                          Prefs.openRouterPromptKey = key;
+                          Prefs.openRouterPrompt = promptValues[key]!;
+                          _promptController.text = Prefs.openRouterPrompt;
                         });
                       }
                     },
-                    items: _modelLabels.entries.map((entry) {
+                    items: promptOptions.entries.map((entry) {
                       return DropdownMenuItem(
                         value: entry.key,
-                        child:
-                            Text(entry.value, overflow: TextOverflow.ellipsis),
+                        child: Text(entry.value),
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 8.0),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.download),
-                      label: const Text('Update model list'),
-                      onPressed: () => _updateModelsFromGitHub(context),
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _promptController,
                     maxLines: null,
                     style: const TextStyle(fontFamily: 'monospace'),
-                    decoration: const InputDecoration(
-                      labelText: 'Custom OpenRouter Prompt',
+                    decoration: InputDecoration(
+                      labelText:
+                          AppLocalizations.of(context)!.customAiPromptLabel,
                       alignLabelWithHint: true,
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       Prefs.openRouterPrompt = value;
@@ -268,15 +335,18 @@ class _AiSettingsViewState extends State<AiSettingsView> {
                     alignment: Alignment.centerRight,
                     child: ElevatedButton.icon(
                       icon: const Icon(Icons.refresh),
-                      label: const Text('Reset to Default'),
+                      label: Text(
+                          AppLocalizations.of(context)!.resetAiPromptDefault),
                       onPressed: () {
                         setState(() {
                           Prefs.openRouterPrompt = defaultOpenRouterPrompt;
                           _promptController.text = defaultOpenRouterPrompt;
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Prompt reset to default')),
+                          SnackBar(
+                            content: Text(AppLocalizations.of(context)!
+                                .resetAiPromptDefault),
+                          ),
                         );
                       },
                     ),

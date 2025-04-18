@@ -15,6 +15,7 @@ import '../../../../utils/pali_script.dart';
 import '../controller/reader_view_controller.dart';
 import 'pali_page_widget.dart';
 import 'vertical_book_slider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class VerticalBookView extends StatefulWidget {
   const VerticalBookView(
@@ -23,13 +24,13 @@ class VerticalBookView extends StatefulWidget {
       this.onSharedSelectedText,
       this.onClickedWord,
       this.onSearchedInCurrentBook,
-      this.onOpenRouterTranslateSelected,
+      this.onAiContextRightClick,
       this.onSelectionChanged});
   final ValueChanged<String>? onSearchedSelectedText;
   final ValueChanged<String>? onSharedSelectedText;
   final ValueChanged<String>? onClickedWord;
   final ValueChanged<String>? onSearchedInCurrentBook;
-  final ValueChanged<String>? onOpenRouterTranslateSelected;
+  final ValueChanged<String>? onAiContextRightClick;
   final ValueChanged<String>? onSelectionChanged;
 
   @override
@@ -173,14 +174,15 @@ class _VerticalBookViewState extends State<VerticalBookView>
                                   widget.onSearchedSelectedText
                                       ?.call(_selectedContent!.plainText);
                                 },
-                                label: 'Search'),
+                                label: AppLocalizations.of(context)!.search),
                             ContextMenuButtonItem(
                                 onPressed: () {
                                   ContextMenuController.removeAny();
                                   widget.onSearchedInCurrentBook
                                       ?.call(_selectedContent!.plainText);
                                 },
-                                label: 'Search in current'),
+                                label: AppLocalizations.of(context)!
+                                    .searchInCurrent),
                             ContextMenuButtonItem(
                                 onPressed: () {
                                   ContextMenuController.removeAny();
@@ -189,10 +191,9 @@ class _VerticalBookViewState extends State<VerticalBookView>
                                   //final trimmed = fullText.length > 1800
                                   //  ? fullText.substring(0, 1800)
                                   //: fullText;
-                                  widget.onOpenRouterTranslateSelected
-                                      ?.call(fullText);
+                                  widget.onAiContextRightClick?.call(fullText);
                                 },
-                                label: 'AI Translate'),
+                                label: AppLocalizations.of(context)!.aiContext),
                             ContextMenuButtonItem(
                                 onPressed: () {
                                   ContextMenuController.removeAny();
@@ -201,7 +202,7 @@ class _VerticalBookViewState extends State<VerticalBookView>
                                   // Share.share(_selectedContent!.plainText,
                                   //     subject: 'Pāḷi text from TPR');
                                 },
-                                label: 'Share'),
+                                label: AppLocalizations.of(context)!.share),
                           ],
                         );
                       },

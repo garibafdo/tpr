@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -11,10 +12,10 @@ import 'package:tipitaka_pali/services/prefs.dart';
 import 'package:tipitaka_pali/services/provider/theme_change_notifier.dart';
 import 'package:tipitaka_pali/services/rx_prefs.dart';
 import 'package:tipitaka_pali/ui/screens/reader/mobile_reader_container.dart';
+import 'package:tipitaka_pali/ui/screens/reader/widgets/interactive_html_text.dart';
 import 'package:tipitaka_pali/ui/screens/reader/widgets/search_widget.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
-import 'package:beautiful_soup_dart/beautiful_soup.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../../app.dart';
 import '../../../business_logic/models/book.dart';
@@ -117,6 +118,20 @@ class ReaderView extends StatelessWidget implements Searchable {
   }
 
   Widget _getReader(BuildContext context) {
+// get theme details
+    final theme = Theme.of(context);
+
+    final themeNotifier = context.watch<ThemeChangeNotifier>();
+    final borderColor =
+        themeNotifier.themeData.colorScheme.inverseSurface.getShadeColor();
+    final mediumTheme = themeNotifier.themeData.colorScheme.surfaceVariant;
+    final backgroundColor = switch (Prefs.selectedPageColor) {
+      0 => Colors.white,
+      1 => mediumTheme, //
+      2 => Colors.black,
+      _ => Colors.white,
+    };
+
     final showSearch = context.select<ReaderViewController, bool>(
         (controller) => controller.showSearch);
 
@@ -134,73 +149,165 @@ class ReaderView extends StatelessWidget implements Searchable {
     }
 
     return Scaffold(
-      // appBar: PlatformInfo.isDesktop || Mobile.isTablet(context)
-      //     ? null
-      //     : const ReaderAppBar(),
       body: Consumer<ThemeChangeNotifier>(
-          builder: ((context, themeChangeNotifier, child) => Container(
-                color: Prefs.getChosenColor(context),
-                child: SlidableBar(
-                    slidableController: _sc,
-                    side: Side.bottom,
-                    barContent: const ReaderToolbar(),
-                    size: 100,
-                    clicker: SlidableClicker(controller: _sc),
-                    frontColor: Colors.white,
-                    backgroundColor: Colors.blue.withOpacity(0.3),
-                    clickerSize: 32,
-                    clickerPosition: 0.98,
-                    child: Column(children: [
-                      if (showSearch)
-                        SearchWidget(
-                          word: context
-                              .read<ReaderViewController>()
-                              .searchText
-                              .value,
-                        ),
-                      Expanded(
-                          // padding: EdgeInsets.only(top: showSearch ? 42 : 0),
-                          child: bookViewMode == BookViewMode.horizontal
-                              // don't const these two guys, otherwise theme changes
-                              // won't be reflected, alternatively: get notified about
-                              // changes in the views themselves
-                              ? VerticalBookView(
-                                  onSearchedSelectedText: (text) =>
-                                      _onSearchSelectedText(text, context),
-                                  onSharedSelectedText: _onShareSelectedText,
-                                  onClickedWord: (word) =>
-                                      _onClickedWord(word, context),
-                                  onSearchedInCurrentBook: (text) =>
-                                      _onClickedSearchInCurrent(context, text),
-                                  onOpenRouterTranslateSelected: (text) =>
-                                      _onOpenRouterTranslateSelected(
-                                          text, context),
-                                  onSelectionChanged: (text) {
-                                    Provider.of<ReaderViewController>(context,
-                                            listen: false)
-                                        .selection = text;
-                                  },
-                                )
-                              : HorizontalBookView(
-                                  onSearchedSelectedText: (text) =>
-                                      _onSearchSelectedText(text, context),
-                                  onSharedSelectedText: _onShareSelectedText,
-                                  onClickedWord: (word) =>
-                                      _onClickedWord(word, context),
-                                  onSearchedInCurrentBook: (text) =>
-                                      _onClickedSearchInCurrent(context, text),
-                                  onOpenRouterTranslateSelected: (text) =>
-                                      _onOpenRouterTranslateSelected(
-                                          text, context),
-                                  onSelectionChanged: (text) {
-                                    Provider.of<ReaderViewController>(context,
-                                            listen: false)
-                                        .selection = text;
-                                  },
-                                )),
-                    ])),
-              ))),
-      // bottomNavigationBar: SafeArea(child: ControlBar()),
+        builder: (context, themeChangeNotifier, child) {
+          return Container(
+            color: Prefs.getChosenColor(context),
+            child: SlidableBar(
+              slidableController: _sc,
+              side: Side.bottom,
+              barContent: const ReaderToolbar(),
+              size: 100,
+              clicker: SlidableClicker(controller: _sc),
+              frontColor: Colors.white,
+              backgroundColor: Colors.blue.withOpacity(0.3),
+              clickerSize: 32,
+              clickerPosition: 0.98,
+              child: LayoutBuilder(
+                builder: (context, constraints) => SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          if (showSearch)
+                            SearchWidget(
+                              word: context
+                                  .read<ReaderViewController>()
+                                  .searchText
+                                  .value,
+                            ),
+                          ValueListenableBuilder<String?>(
+                            valueListenable: context
+                                .read<ReaderViewController>()
+                                .aiTranslationHtml,
+                            builder: (context, html, _) {
+                              if (html == null || html.isEmpty) {
+                                return const SizedBox();
+                              }
+                              return Container(
+                                margin: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: backgroundColor,
+                                  border: Border.all(color: borderColor),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      AppLocalizations.of(context)!.aiContext,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    InteractiveHtmlText(
+                                      html: html,
+                                      onWordTap: (word) =>
+                                          _onClickedWord(word, context),
+                                    ),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: TextButton.icon(
+                                        icon: const Icon(Icons.close),
+                                        label: Text(
+                                            AppLocalizations.of(context)!.hide),
+                                        onPressed: () => context
+                                            .read<ReaderViewController>()
+                                            .aiTranslationHtml
+                                            .value = null,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          ValueListenableBuilder<bool>(
+                            valueListenable: context
+                                .read<ReaderViewController>()
+                                .isTranslating,
+                            builder: (context, isLoading, _) {
+                              if (!isLoading) return const SizedBox.shrink();
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 24),
+                                child: Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const CircularProgressIndicator(),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        AppLocalizations.of(context)!.aiContext,
+                                        style: const TextStyle(
+                                            fontStyle: FontStyle.italic),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          Flexible(
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.8,
+                              child: bookViewMode == BookViewMode.horizontal
+                                  ? VerticalBookView(
+                                      onSearchedSelectedText: (text) =>
+                                          _onSearchSelectedText(text, context),
+                                      onSharedSelectedText:
+                                          _onShareSelectedText,
+                                      onClickedWord: (word) =>
+                                          _onClickedWord(word, context),
+                                      onSearchedInCurrentBook: (text) =>
+                                          _onClickedSearchInCurrent(
+                                              context, text),
+                                      onAiContextRightClick: (text) =>
+                                          _onAiContextRightClick(text, context),
+                                      onSelectionChanged: (text) {
+                                        Provider.of<ReaderViewController>(
+                                                context,
+                                                listen: false)
+                                            .selection = text;
+                                      },
+                                    )
+                                  : HorizontalBookView(
+                                      onSearchedSelectedText: (text) =>
+                                          _onSearchSelectedText(text, context),
+                                      onSharedSelectedText:
+                                          _onShareSelectedText,
+                                      onClickedWord: (word) =>
+                                          _onClickedWord(word, context),
+                                      onSearchedInCurrentBook: (text) =>
+                                          _onClickedSearchInCurrent(
+                                              context, text),
+                                      onAiContextRightClick: (text) =>
+                                          _onAiContextRightClick(text, context),
+                                      onSelectionChanged: (text) {
+                                        Provider.of<ReaderViewController>(
+                                                context,
+                                                listen: false)
+                                            .selection = text;
+                                      },
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -334,8 +441,7 @@ class ReaderView extends StatelessWidget implements Searchable {
         );
   }
 
-  Future<void> _onOpenRouterTranslateSelected(
-      String text, BuildContext context) async {
+  Future<void> _onAiContextRightClick(String text, BuildContext context) async {
     if (text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No text selected for translation.')),
@@ -343,88 +449,35 @@ class ReaderView extends StatelessWidget implements Searchable {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        String resultText = '';
-        return AlertDialog(
-          title: Text(
-            'AI Translation ${openRouterModelLabels[Prefs.openRouterModel] ?? Prefs.openRouterModel}',
-          ),
-          content: FutureBuilder<Map<String, dynamic>>(
-            future: _translateWithOpenRouter(context, text),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SizedBox(
-                  height: 60,
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
+    context.read<ReaderViewController>().isTranslating.value = true;
+    try {
+      final Map<String, dynamic> result = Prefs.useGeminiDirect
+          ? await _translateWithGemini(text)
+          : await _translateWithOpenRouter(context, text);
 
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
+      final htmlOutput = result['text'] ?? '';
+      final finishReason = result['finishReason'];
 
-              final result = snapshot.data!;
-              final htmlOutput = result['text'] ?? '';
-              resultText = htmlOutput; // no setState needed
-              final finishReason = result['finishReason'];
-
-              final warning = '''
+      final warning = '''
 <div style="color: red; font-weight: bold; margin-bottom: 12px;">
-⚠️ This translation was generated by an AI model. Accuracy is not guaranteed.
+⚠️  AI Generated. Accuracy is not guaranteed.
 </div>
 ''';
 
-              final truncationNote = (finishReason == 'length_exceeded')
-                  ? '''
+      final truncationNote = (finishReason == 'length_exceeded')
+          ? '''
 <div style="color: orange; font-style: italic; margin-bottom: 8px;">
 Note: Only the first 4000 characters were sent for translation.
 </div>
 '''
-                  : '';
+          : '';
 
-              final fullHtml = '$warning$truncationNote$htmlOutput';
+      final fullHtml = '$warning$truncationNote$htmlOutput';
 
-              return SizedBox(
-                height: 400,
-                width: 500,
-                child: SingleChildScrollView(
-                  child: HtmlWidget(fullHtml),
-                ),
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (resultText.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Nothing to copy.')),
-                  );
-                  return;
-                }
-                // Use BeautifulSoup to strip HTML and get plain text
-                // Replace <br> with double newlines
-                String processedText = resultText.replaceAll(
-                    RegExp(r'<br\s*/?>', caseSensitive: false), '\n\n');
-                final soup = BeautifulSoup(processedText);
-                final plainText = soup.text;
-                await Clipboard.setData(ClipboardData(text: plainText));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Translation copied.')),
-                );
-              },
-              child: const Text('Copy'),
-            ),
-          ],
-        );
-      },
-    );
+      context.read<ReaderViewController>().aiTranslationHtml.value = fullHtml;
+    } finally {
+      context.read<ReaderViewController>().isTranslating.value = false;
+    }
   }
 
   Future<Map<String, dynamic>> _translateWithOpenRouter(
@@ -450,8 +503,8 @@ Note: Only the first 4000 characters were sent for translation.
         headers: {
           'Authorization': 'Bearer $apiKey',
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://yourmonastery.org',
-          'X-Title': 'Buddhist Sun',
+          'HTTP-Referer': 'https://americanmonk.org',
+          'X-Title': 'Tipitaka Pali Reader',
         },
         body: utf8.encode(jsonEncode(requestBody)),
       );
@@ -489,6 +542,62 @@ Note: Only the first 4000 characters were sent for translation.
       return {
         'text':
             '<div style="color: red; font-weight: bold;">Exception: $e</div>',
+        'finishReason': 'exception',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> _translateWithGemini(String inputText) async {
+    final apiKey = Prefs.geminiDirectApiKey;
+
+    // ✅ Hardcoded to Gemini 1.5 Flash (free tier)
+    const endpoint =
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+    final requestBody = {
+      "contents": [
+        {
+          "parts": [
+            {"text": Prefs.openRouterPrompt.trim()},
+            {"text": inputText}
+          ]
+        }
+      ]
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse('$endpoint?key=$apiKey'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (data.containsKey('error')) {
+        final errorMessage = data['error']['message'] ?? 'Gemini API Error';
+        return {
+          'text':
+              '<div style="color: red; font-weight: bold;">$errorMessage</div>',
+          'finishReason': 'error',
+        };
+      }
+
+      final parts = data['candidates']?[0]['content']['parts'];
+      final responseText = parts?.map((e) => e['text']).join('\n') ?? '';
+
+      return {
+        'text': responseText.isNotEmpty
+            ? responseText
+            : '<div style="color: red; font-weight: bold;">No Gemini response.</div>',
+        'finishReason': 'success',
+      };
+    } catch (e) {
+      return {
+        'text':
+            '<div style="color: red; font-weight: bold;">Gemini exception: $e</div>',
         'finishReason': 'exception',
       };
     }

@@ -16,13 +16,13 @@ class HorizontalBookView extends StatefulWidget {
       this.onSharedSelectedText,
       this.onClickedWord,
       this.onSearchedInCurrentBook,
-      this.onOpenRouterTranslateSelected,
+      this.onAiContextRightClick,
       this.onSelectionChanged});
   final ValueChanged<String>? onSearchedSelectedText;
   final ValueChanged<String>? onSharedSelectedText;
   final ValueChanged<String>? onClickedWord;
   final ValueChanged<String>? onSearchedInCurrentBook;
-  final ValueChanged<String>? onOpenRouterTranslateSelected;
+  final ValueChanged<String>? onAiContextRightClick;
   final ValueChanged<String>? onSelectionChanged;
 
   @override
@@ -121,9 +121,9 @@ class _HorizontalBookViewState extends State<HorizontalBookView> {
                           //final trimmed = fullText.length > 1800
                           //  ? fullText.substring(0, 1800)
                           // : fullText;
-                          widget.onOpenRouterTranslateSelected?.call(fullText);
+                          widget.onAiContextRightClick?.call(fullText);
                         },
-                        label: 'AI Translate'),
+                        label: AppLocalizations.of(context)!.aiContext),
                     ContextMenuButtonItem(
                         onPressed: () {
                           ContextMenuController.removeAny();
