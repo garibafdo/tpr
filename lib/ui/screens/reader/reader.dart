@@ -118,9 +118,6 @@ class ReaderView extends StatelessWidget implements Searchable {
   }
 
   Widget _getReader(BuildContext context) {
-// get theme details
-    final theme = Theme.of(context);
-
     final themeNotifier = context.watch<ThemeChangeNotifier>();
     final borderColor =
         themeNotifier.themeData.colorScheme.inverseSurface.getShadeColor();
@@ -451,9 +448,22 @@ class ReaderView extends StatelessWidget implements Searchable {
 
     context.read<ReaderViewController>().isTranslating.value = true;
     try {
+      // Trim and check for 1000-character limit
+      String truncatedText = text.trim();
+      String truncationNote = '';
+
+      if (truncatedText.length > 1000) {
+        truncatedText = truncatedText.substring(0, 1000);
+        truncationNote = '''
+<div style="color: orange; font-style: italic; margin-bottom: 8px;"> 
+Note: Only the first 1000 characters were sent for translation. 
+</div> // 
+''';
+      }
+
       final Map<String, dynamic> result = Prefs.useGeminiDirect
-          ? await _translateWithGemini(text)
-          : await _translateWithOpenRouter(context, text);
+          ? await _translateWithGemini(truncatedText)
+          : await _translateWithOpenRouter(context, truncatedText);
 
       final htmlOutput = result['text'] ?? '';
       final finishReason = result['finishReason'];
@@ -464,19 +474,15 @@ class ReaderView extends StatelessWidget implements Searchable {
 </div>
 ''';
 
-      final truncationNote = (finishReason == 'length_exceeded')
-          ? '''
-<div style="color: orange; font-style: italic; margin-bottom: 8px;">
-Note: Only the first 4000 characters were sent for translation.
-</div>
-'''
-          : '';
-
       final fullHtml = '$warning$truncationNote$htmlOutput';
 
-      context.read<ReaderViewController>().aiTranslationHtml.value = fullHtml;
+      if (context.mounted) {
+        context.read<ReaderViewController>().aiTranslationHtml.value = fullHtml;
+      }
     } finally {
-      context.read<ReaderViewController>().isTranslating.value = false;
+      if (context.mounted) {
+        context.read<ReaderViewController>().isTranslating.value = false;
+      }
     }
   }
 

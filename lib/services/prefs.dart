@@ -9,16 +9,6 @@ import 'package:tipitaka_pali/utils/simple_encryptor.dart';
 
 import '../data/constants.dart';
 
-// for ai models
-const Map<String, String> openRouterModelLabels = {
-  'google/gemini-flash-1.5-8b-exp': 'Gemini Flash 1.5',
-  'google/gemini-2.5-pro-exp-03-25:free': 'Gemini Pro 2.5',
-  'deepseek/deepseek-chat-v3-0324:free': 'DeepSeek Chat V3',
-  'nvidia/llama-3.1-nemotron-70b-instruct:free': 'Nvidia Llama 3.1',
-  'openai/chatgpt-4o-latest': '\$\$ Current 4o',
-  'openai/gpt-4o-2024-08-06': '\$ Nov-2024 Gpt 4o'
-};
-
 // preference names
 const String localeValPref = "localeVal";
 const String themeIndexPref = "themeIndex";

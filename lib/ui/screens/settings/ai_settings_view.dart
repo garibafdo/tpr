@@ -65,8 +65,9 @@ class _AiSettingsViewState extends State<AiSettingsView> {
           'google/gemini-2.5-pro-exp-03-25:free': 'Gemini Pro 2.5',
           'deepseek/deepseek-chat-v3-0324:free': 'DeepSeek Chat V3',
           'nvidia/llama-3.1-nemotron-70b-instruct:free': 'Nvidia Llama 3.1',
-          'openai/chatgpt-4o-latest': '\$\$ Current 4o',
-          'openai/gpt-4o-2024-08-06': '\$ Nov-2024 Gpt 4o',
+          'openai/gpt-4.1': '\$ OpenAI 4.1 ',
+          'openai/chatgpt-4o-latest': '\$\$ OpenAi 4o',
+          'x-ai/grok-3-beta': '\$\$ Grok 3 Beta',
         };
         await file.writeAsString(json.encode(defaultModels));
         if (mounted) {
@@ -315,6 +316,17 @@ class _AiSettingsViewState extends State<AiSettingsView> {
                       );
                     }).toList(),
                   ),
+                  const SizedBox(height: 16),
+                  if (!Prefs.useGeminiDirect)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.download),
+                        label:
+                            Text(AppLocalizations.of(context)!.updateModelList),
+                        onPressed: () => _updateModelsFromGitHub(context),
+                      ),
+                    ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _promptController,
