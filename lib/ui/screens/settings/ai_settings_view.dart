@@ -153,9 +153,18 @@ class _AiSettingsViewState extends State<AiSettingsView> {
             child: Text(AppLocalizations.of(context)!.close),
           ),
           ElevatedButton(
-            child: Text(AppLocalizations.of(context)!.getKey),
+            child: Text(AppLocalizations.of(context)!.getOpenRouterKey),
             onPressed: () async {
               final url = Uri.parse('https://openrouter.ai');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              }
+            },
+          ),
+          ElevatedButton(
+            child: Text(AppLocalizations.of(context)!.getGenminiKey),
+            onPressed: () async {
+              final url = Uri.parse('https://aistudio.google.com/app/apikey');
               if (await canLaunchUrl(url)) {
                 await launchUrl(url);
               }
