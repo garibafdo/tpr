@@ -1,43 +1,43 @@
 {
   "general": {
-    "message": "TPR Build 84 is available for Android, Windows and Linux (apple is delayed).\n\nWhat's New? Search shows sutta names in the search results.\nLatest DPD and PEU from March, 2025.  \n\nMay this dhammadāna be a cause for Nibbāna for the programmers and volunteers of this app and also for all beings and past relatives.",
-    "messageDate": "20250401",
+    "message": "TPR Build 85+ is available for Android, iOS, Windows, Mac and Linux .\n\nWhat's New? AI Context window.  Add Key, highlight and right click.  \n\nMay this dhammadāna be a cause for Nibbāna for the programmers and volunteers of this app and also for all beings and past relatives.",
+    "messageDate": "20250507",
     "peuDate": "March, 2025",
     "dpdDate": "March, 2025"
   },
   "android": {
-    "currentVersion": "2.6.7+84",
+    "currentVersion": "2.7.0+85",
     "message": "Download in the Play Store",
-    "messageDate": "20250401",
+    "messageDate": "20250507",
     "peuDate": "March, 2025",
     "dpdDate": "March, 2025"
   },
   "windows": {
-    "currentVersion": "2.6.7+84",
-    "message": "Build 84 in MS App Store and github repo as exe",
-    "messageDate": "20250401",
+    "currentVersion": "2.7.0+85",
+    "message": "Build 85 in MS App Store and github repo as exe",
+    "messageDate": "20250507",
     "peuDate": "March, 2025",
     "dpdDate": "March, 2025"
   },
   "linux": {
-    "currentVersion": "2.6.7+84",
-    "message": "Appimage build 84  Appimage and Flatpak",
-    "messageDate": "20250401",
+    "currentVersion": "2.7.0+85",
+    "message": "Appimage build 85  Appimage and Flatpak",
+    "messageDate": "20250507",
     "peuDate": "March, 2025",
     "dpdDate": "March, 2025"
   },
   "ios": {
-    "currentVersion": "79",
-    "message": "Build 79",
-    "messageDate": "20231130",
-    "peuDate": "Sept, 2024",
-    "dpdDate": "July, 2024"
+    "currentVersion": "2.7.0+87",
+    "message": "Build 87 in app store",
+    "messageDate": "20250507",
+    "peuDate": "March, 2025",
+    "dpdDate": "March, 2025"
   },
   "macos": {
-    "currentVersion": "79",
-    "message": "Build 79",
-    "messageDate": "20231130",
-    "peuDate": "Sept, 2024",
-    "dpdDate": "July, 2024"
+    "currentVersion": "87",
+    "message": "Build 87 available in app store",
+    "messageDate": "20250507",
+    "peuDate": "March, 2025",
+    "dpdDate": "March, 2025"
   }
 }
