@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:el_tooltip/el_tooltip.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/provider/script_language_provider.dart';

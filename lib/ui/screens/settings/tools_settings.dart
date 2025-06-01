@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:tipitaka_pali/routes.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/dictionary_page.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/flashcard_setup_view.dart';

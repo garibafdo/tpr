@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For clipboard copy
 import 'package:tipitaka_pali/utils/pali_script.dart';
 import 'package:tipitaka_pali/utils/pali_script_converter.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:tipitaka_pali/utils/script_detector.dart';
 
 class TextConverterView extends StatefulWidget {

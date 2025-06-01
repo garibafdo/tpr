@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:tipitaka_pali/business_logic/models/freq.dart';
 import 'package:tipitaka_pali/ui/screens/dictionary/controller/dictionary_controller.dart';
@@ -69,7 +69,8 @@ void showFreqDialog(BuildContext context, int wordId) async {
 
   final isMobile = Mobile.isPhone(context);
   const mobileScrollbarHeight = 7.0;
-  double mobileWidth = MediaQuery.of(context).size.width - mobileScrollbarHeight;
+  double mobileWidth =
+      MediaQuery.of(context).size.width - mobileScrollbarHeight;
   final freqWidget = _getFreqWidget(
       context, freqMatrix, gradMatrix, isMobile ? mobileWidth : null);
 
@@ -80,10 +81,9 @@ void showFreqDialog(BuildContext context, int wordId) async {
         child: isMobile
             ? Container(
                 // width: mobileWidth,
-                  constraints: BoxConstraints(
-
-                    minWidth: mobileWidth,
-                  ),
+                constraints: BoxConstraints(
+                  minWidth: mobileWidth,
+                ),
                 child: freqWidget,
               )
             : Container(
@@ -291,12 +291,16 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
   );
 
   double cellHeight =
-      paintedHeight(context, TextSpan(text: 'Majjhima', style: sectionStyle)) + 2 * 8;
-  double largestSectionWidth = paintedWidth(context, 'Khuddaka Nikāya 3', sectionStyle);
-  double headerHeight = paintedHeight(context, TextSpan(
-    text: 'Section MAṬ',
-    style: headerStyle,
-  ));
+      paintedHeight(context, TextSpan(text: 'Majjhima', style: sectionStyle)) +
+          2 * 8;
+  double largestSectionWidth =
+      paintedWidth(context, 'Khuddaka Nikāya 3', sectionStyle);
+  double headerHeight = paintedHeight(
+      context,
+      TextSpan(
+        text: 'Section MAṬ',
+        style: headerStyle,
+      ));
   debugPrint('cellHeight: $cellHeight, header height: $headerHeight');
 
   // FIND the largest frequency cell width =====================================
@@ -330,7 +334,8 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
       3 * (largestFreqCellWidth + doublePadding + cellLeeway + borderWidth * 2);
   // End Offsets ===============================================================
 
-  debugPrint('\nprojectedTableWidth: $projectedTableWidth -- \nmobileWidth: $width -- \ndevicePixelRatio: $devicePixelRatio, \nlargestFreqCellWidth: $largestFreqCellWidth, \nlargestSectionWidth: $largestSectionWidth');
+  debugPrint(
+      '\nprojectedTableWidth: $projectedTableWidth -- \nmobileWidth: $width -- \ndevicePixelRatio: $devicePixelRatio, \nlargestFreqCellWidth: $largestFreqCellWidth, \nlargestSectionWidth: $largestSectionWidth');
 
   const borderDecoration = BoxDecoration(
       border: Border.fromBorderSide(
@@ -400,7 +405,6 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
 
   debugPrint('topOffset: $topOffset, cellHeight=$cellHeight');
 
-
   return Row(
     mainAxisAlignment: MainAxisAlignment.start,
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +414,9 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
         child: Table(
           children: weights.mapIndexed((index, weight) {
             final title = titles[index].split('').join('\n');
-            double bookHeight = weight * (cellHeight.floor() + borderWidth * 2) - borderWidth * 2;
+            double bookHeight =
+                weight * (cellHeight.floor() + borderWidth * 2) -
+                    borderWidth * 2;
             return TableRow(
               children: [
                 Container(
@@ -419,16 +425,18 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
                     // ),
                     decoration: borderDecoration,
                     child: SizedBox(
-                        height: bookHeight,
-                        child: Center(
-                            child: Text(
-                              title,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontFamily: FontUtils.getfontName(script: Script.roman),
-                                  fontSize: freqFontSize * 0.9,
-                                  height: 1),
-                            )),)),
+                      height: bookHeight,
+                      child: Center(
+                          child: Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontFamily:
+                                FontUtils.getfontName(script: Script.roman),
+                            fontSize: freqFontSize * 0.9,
+                            height: 1),
+                      )),
+                    )),
               ],
             );
           }).toList(),
@@ -439,39 +447,46 @@ Widget _getFreqTable(BuildContext context, List<List<dynamic>> freqMatrix,
           ? Padding(
               padding: const EdgeInsets.only(right: scrollbarDesktopWidth),
               child: Table(
-                defaultColumnWidth: FixedColumnWidth(largestFreqCellWidth + doublePadding + cellLeeway),
+                defaultColumnWidth: FixedColumnWidth(
+                    largestFreqCellWidth + doublePadding + cellLeeway),
                 columnWidths: const {
                   0: IntrinsicColumnWidth(),
                 },
                 children: rows,
               ))
-          :
-
-      projectedTableWidth > width ?
-
-      Container(
-        constraints: BoxConstraints(
-          minWidth: width - bookLegendGap - bookLegendWidth - doublePadding - cellLeeway,
-              maxWidth: double.infinity,
-        ),
-          // width: ,
-          child: Table(
-            defaultColumnWidth: FixedColumnWidth(largestFreqCellWidth + doublePadding + cellLeeway),
-            columnWidths: const {
-              0: IntrinsicColumnWidth(),
-            },
-            children: rows,
-          ))
-      :
-      SizedBox(
-              width: width - bookLegendGap - bookLegendWidth - doublePadding - cellLeeway,
-              child: Table(
-                defaultColumnWidth: FixedColumnWidth(largestFreqCellWidth + doublePadding + cellLeeway),
-                columnWidths: const {
-                  0: FlexColumnWidth(),
-                },
-                children: rows,
-              )),
+          : projectedTableWidth > width
+              ? Container(
+                  constraints: BoxConstraints(
+                    minWidth: width -
+                        bookLegendGap -
+                        bookLegendWidth -
+                        doublePadding -
+                        cellLeeway,
+                    maxWidth: double.infinity,
+                  ),
+                  // width: ,
+                  child: Table(
+                    defaultColumnWidth: FixedColumnWidth(
+                        largestFreqCellWidth + doublePadding + cellLeeway),
+                    columnWidths: const {
+                      0: IntrinsicColumnWidth(),
+                    },
+                    children: rows,
+                  ))
+              : SizedBox(
+                  width: width -
+                      bookLegendGap -
+                      bookLegendWidth -
+                      doublePadding -
+                      cellLeeway,
+                  child: Table(
+                    defaultColumnWidth: FixedColumnWidth(
+                        largestFreqCellWidth + doublePadding + cellLeeway),
+                    columnWidths: const {
+                      0: FlexColumnWidth(),
+                    },
+                    children: rows,
+                  )),
     ],
   );
 }

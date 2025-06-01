@@ -10,7 +10,7 @@ import 'package:tipitaka_pali/ui/screens/dictionary/controller/dictionary_contro
 import 'package:tipitaka_pali/ui/screens/settings/download_view.dart';
 import 'package:tipitaka_pali/utils/platform_info.dart';
 import 'package:tipitaka_pali/utils/display_utils.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 showDeclensionDialog(BuildContext context, int wordId) async {
   var dictionaryController = context.read<DictionaryController>();

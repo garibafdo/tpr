@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:tipitaka_pali/ui/screens/settings/settings.dart';
 import 'package:tipitaka_pali/ui/widgets/select_theme_widget.dart';
 import 'package:tipitaka_pali/ui/widgets/use_m3_widget.dart';

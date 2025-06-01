@@ -68,89 +68,93 @@ class _DictionarySearchFieldState extends State<DictionarySearchField> {
 
   @override
   Widget build(BuildContext context) {
-    return TypeAheadField(
-        textFieldConfiguration: TextFieldConfiguration(
-            autocorrect: false,
-            controller: textEditingController,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(16)),
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-              suffixIcon: ValueListenableBuilder(
-                  valueListenable: showClearButton,
-                  builder: (context, isVisible, _) {
-                    return Visibility(
-                        visible: isVisible,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 16.0),
-                          child: IconButton(
-                            onPressed: () {
-                              textEditingController.clear();
-                              // dictionaryController.onClickedHistoryButton();
-                            },
-                            icon: const Icon(Icons.clear),
-                          ),
-                        ));
-                  }),
+    return TypeAheadField<String>(
+      controller: textEditingController,
+      suggestionsCallback: (text) async {
+        if (text.isEmpty) return <String>[];
+        final inputLanguage = ScriptDetector.getLanguage(text);
+        final romanText = PaliScript.getRomanScriptFrom(
+          script: inputLanguage,
+          text: text,
+        );
+        return await context
+            .read<DictionaryController>()
+            .getSuggestions(romanText);
+      },
+      itemBuilder: (context, String suggestion) {
+        return ListTile(
+          title: Text(PaliScript.getScriptOf(
+            script: context.read<ScriptLanguageProvider>().currentScript,
+            romanText: suggestion,
+          )),
+        );
+      },
+      onSelected: (String suggestion) async {
+        final inputLanguage =
+            ScriptDetector.getLanguage(textEditingController.text);
+        textEditingController.text = PaliScript.getScriptOf(
+          script: inputLanguage,
+          romanText: suggestion,
+        );
+        await insertHistory(suggestion);
+        context.read<DictionaryController>().onLookup(suggestion);
+      },
+      builder: (context, controller, focusNode) {
+        return TextField(
+          controller: controller,
+          focusNode: focusNode,
+          autocorrect: false,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
             ),
-            onSubmitted: (word) async {
-              await insertHistory(word);
-              context.read<DictionaryController>().onLookup(word);
-            },
-            onChanged: (text) {
-              String inputText = text;
-              final inputScript = ScriptDetector.getLanguage(inputText);
+            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+            suffixIcon: ValueListenableBuilder(
+              valueListenable: showClearButton,
+              builder: (context, isVisible, _) {
+                return Visibility(
+                  visible: isVisible,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: IconButton(
+                      onPressed: () {
+                        controller.clear();
+                      },
+                      icon: const Icon(Icons.clear),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          onChanged: (text) {
+            showClearButton.value = text.isNotEmpty;
+            String inputText = text;
+            final inputScript = ScriptDetector.getLanguage(inputText);
 
-              // convert velthuis input to uni
-              if (text.isNotEmpty) {
-                // text controller naturally pushes to the beginning
-                // fixed to keep natural position
+            if (text.isNotEmpty) {
+              int origTextLen = text.length;
+              int pos = controller.selection.start;
 
-                // before conversion get cursor position and length
-                int origTextLen = text.length;
-                int pos = textEditingController.selection.start;
-
-                if (!Prefs.disableVelthuis && inputScript == Script.roman) {
-                  final uniText = PaliTools.velthuisToUni(velthiusInput: text);
-                  // after conversion get length and add the difference (if any)
-                  int uniTextlen = uniText.length;
-                  textEditingController.text = uniText;
-                  textEditingController.selection = TextSelection.fromPosition(
-                      TextPosition(offset: pos + uniTextlen - origTextLen));
-                }
-              } else {
-                context.read<DictionaryController>().onInputIsEmpty();
+              if (!Prefs.disableVelthuis && inputScript == Script.roman) {
+                final uniText = PaliTools.velthuisToUni(velthiusInput: text);
+                int uniTextlen = uniText.length;
+                controller.text = uniText;
+                controller.selection = TextSelection.fromPosition(
+                  TextPosition(offset: pos + uniTextlen - origTextLen),
+                );
               }
-            }),
-        suggestionsCallback: (text) async {
-          if (text.isEmpty) {
-            return <String>[];
-          } else {
-            final inputLanguage = ScriptDetector.getLanguage(text);
-            final romanText = PaliScript.getRomanScriptFrom(
-                script: inputLanguage, text: text);
-            final suggestions = await context
-                .read<DictionaryController>()
-                .getSuggestions(romanText);
-            return suggestions;
-          }
-        },
-        debounceDuration: Duration.zero,
-        itemBuilder: (context, String suggestion) {
-          return ListTile(
-              title: Text(PaliScript.getScriptOf(
-                  script: context.read<ScriptLanguageProvider>().currentScript,
-                  romanText: suggestion)));
-        },
-        onSuggestionSelected: (String suggestion) async {
-          final inputLanguage =
-              ScriptDetector.getLanguage(textEditingController.text);
-          textEditingController.text = PaliScript.getScriptOf(
-              script: inputLanguage, romanText: suggestion);
-          await insertHistory(suggestion);
-          context.read<DictionaryController>().onLookup(suggestion);
-        });
+            } else {
+              context.read<DictionaryController>().onInputIsEmpty();
+            }
+          },
+          onSubmitted: (word) async {
+            await insertHistory(word);
+            context.read<DictionaryController>().onLookup(word);
+          },
+        );
+      },
+    );
   }
 
   insertHistory(word) async {

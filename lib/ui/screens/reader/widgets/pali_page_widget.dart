@@ -24,7 +24,7 @@ import '../../../../services/provider/theme_change_notifier.dart';
 import '../../../../utils/pali_script.dart';
 import '../../../../utils/pali_script_converter.dart';
 import '../controller/reader_view_controller.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 class PaliPageWidget extends StatefulWidget {
   final int pageNumber;

@@ -18,7 +18,7 @@ import '../../../../services/repositories/dictionary_history_repo.dart';
 import '../../../../services/repositories/dictionary_repo.dart';
 import 'dictionary_state.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 // global variable
 final ValueNotifier<String?> globalLookupWord = ValueNotifier<String?>(null);

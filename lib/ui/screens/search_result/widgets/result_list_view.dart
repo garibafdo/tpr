@@ -5,7 +5,7 @@ import '../../../../business_logic/models/search_result.dart';
 import '../../home/widgets/search_result_list_tile.dart';
 import '../controller/search_result_provider.dart';
 import 'search_filter_view.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:tipitaka_pali/ui/screens/reader/intents.dart';
 

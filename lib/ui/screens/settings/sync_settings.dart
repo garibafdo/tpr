@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
 import 'package:tipitaka_pali/services/provider/user_notifier.dart';
 import 'package:tipitaka_pali/services/repositories/fire_user_repository.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 class SyncSettingsView extends StatefulWidget {
   const SyncSettingsView({super.key});

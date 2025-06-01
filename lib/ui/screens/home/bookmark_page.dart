@@ -12,7 +12,7 @@ import 'package:tipitaka_pali/services/repositories/bookmark_repo.dart';
 import 'package:tipitaka_pali/services/repositories/folder_epository%20%7B.dart';
 import 'package:tipitaka_pali/ui/screens/home/bookmark_app_bar.dart';
 import 'package:tipitaka_pali/ui/screens/home/widgets/folder_path_navigator.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 import '../../../../services/provider/script_language_provider.dart';
 import '../../../../utils/pali_script.dart';

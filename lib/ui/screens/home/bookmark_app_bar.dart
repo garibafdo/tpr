@@ -12,7 +12,7 @@ import 'package:tipitaka_pali/services/prefs.dart';
 import 'package:tipitaka_pali/services/repositories/bookmark_repo.dart';
 import 'package:tipitaka_pali/ui/dialogs/bookmark_cloud_transfer_dialog.dart';
 import 'package:tipitaka_pali/ui/dialogs/confirm_dialog.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:tipitaka_pali/ui/widgets/colored_text.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';

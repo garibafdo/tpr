@@ -4,7 +4,7 @@ import 'package:tipitaka_pali/business_logic/models/download_list_item.dart';
 import 'download_service.dart';
 import 'download_notifier.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
 

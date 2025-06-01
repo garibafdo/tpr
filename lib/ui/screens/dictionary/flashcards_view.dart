@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flash_card/flash_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:path/path.dart' as path;
@@ -187,7 +187,7 @@ class FlashCardsView extends StatelessWidget {
           itemCount: cards.length,
           itemBuilder: (context, index) {
             return FlashCard(
-              backWidget: Container(
+              backWidget: () => Container(
                 padding: EdgeInsets.all(10), // Add padding for better spacing
                 constraints: BoxConstraints(
                   maxHeight: 400, // Set a maximum height
@@ -211,7 +211,7 @@ class FlashCardsView extends StatelessWidget {
                   ),
                 ),
               ),
-              frontWidget: FutureBuilder<String>(
+              frontWidget: () => FutureBuilder<String>(
                 future: dictionaryController
                     .loadDefinition(cards[index].word), // your future operation
                 builder:

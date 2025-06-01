@@ -7,7 +7,7 @@ import '../../../../services/provider/script_language_provider.dart';
 import '../../../../utils/pali_script.dart';
 import '../controller/reader_view_controller.dart';
 import 'pali_page_widget.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 class HorizontalBookView extends StatefulWidget {
   const HorizontalBookView(

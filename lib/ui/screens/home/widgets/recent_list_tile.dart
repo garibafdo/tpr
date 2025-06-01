@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../business_logic/models/recent.dart';
 import '../../../../services/provider/script_language_provider.dart';
 import '../../../../utils/pali_script.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 class RecentListTile extends StatelessWidget {
   const RecentListTile(

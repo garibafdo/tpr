@@ -1,7 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:tipitaka_pali/ui/dialogs/reset_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';

@@ -72,6 +72,9 @@ linked_*.ds
 unlinked.ds
 unlinked_spec.ds
 
+#ignore generated l10n files
+**/l10n/*.dart
+
 # Android related
 **/android/**/gradle-wrapper.jar
 **/android/.gradle

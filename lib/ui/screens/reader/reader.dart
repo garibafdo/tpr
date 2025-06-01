@@ -15,7 +15,7 @@ import 'package:tipitaka_pali/ui/screens/reader/mobile_reader_container.dart';
 import 'package:tipitaka_pali/ui/screens/reader/widgets/interactive_html_text.dart';
 import 'package:tipitaka_pali/ui/screens/reader/widgets/search_widget.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 import '../../../app.dart';
 import '../../../business_logic/models/book.dart';

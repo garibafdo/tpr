@@ -25,15 +25,12 @@ dependencies:
     sdk: flutter
   flutter_localizations: # Add this line
     sdk: flutter # Add this line
-  # #enddocregion FlutterLocalizations
-  intl: ^0.19.0 # Add this line
-  # #enddocregion Intl
-
+  intl: ^0.20.2
   sqflite: ^2.3.3
   path: ^1.8.2
   path_provider: ^2.1.5
   shared_preferences: ^2.5.3
-  flutter_slidable: ^3.0.0
+  flutter_slidable: ^4.0.0
   provider: ^6.1.2
   substring_highlight: ^1.0.33
   toggle_switch: ^2.3.0
@@ -41,12 +38,12 @@ dependencies:
   logger: ^2.4.0
   cupertino_icons: ^1.0.8
 # flex_color_scheme: ^7.1.0  // if using 3.10.6
-  flex_color_scheme: ^7.3.1
+  flex_color_scheme: ^8.2.0
   sqflite_common: ^2.5.4
-  freezed_annotation: ^2.1.0
+  freezed_annotation: ^3.0.0
   sqflite_common_ffi: ^2.3.3
   wtf_sliding_sheet: ^1.1.3
-  flutter_typeahead: ^4.3.3
+  flutter_typeahead: ^5.2.0
   flutter_widget_from_html_core: ^0.16.0
   # fwfh_text_style: ^2.22.8+1
   styled_text: ^8.1.0
@@ -63,12 +60,12 @@ dependencies:
   huge_listview: ^2.0.2
   beautiful_soup_dart: ^0.3.0
   http: ^1.3.0
-  internet_connection_checker: ^1.0.0
+  internet_connection_checker: ^3.0.1
   archive: ^3.6.1
   url_launcher: ^6.3.0
-  devicelocale: ^0.7.0
+  devicelocale: ^0.8.1
   dio: ^5.5.0
-  share_plus: ^10.0.3
+  share_plus: ^11.0.0
   streaming_shared_preferences: ^2.0.0
   ms_material_color: ^1.0.0
   uuid: ^4.4.2
@@ -78,16 +75,16 @@ dependencies:
   in_app_review: ^2.0.9
   internet_connection_checker_plus: ^2.5.0
   msix: ^3.16.7
-  flash_card: ^0.0.7
+  flash_card: ^0.1.0
   flashcardplus: ^0.0.2
   csv: ^6.0.0
-  file_picker: ^8.3.7
+  file_picker: ^10.1.5
   flutter_speed_dial: ^7.0.0
   scroll_to_index: ^3.0.1
   firedart: ^0.9.7
   flutter_dotenv: ^5.1.0
   im_stepper: ^1.0.1+1
-  permission_handler: ^11.4.0
+  permission_handler: ^12.0.0+1
   encrypt: ^5.0.3
   pointycastle: ^3.9.1
   crypto: ^3.0.3
@@ -96,8 +93,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
-  freezed: ^2.1.0+1
+  flutter_lints: ^5.0.0
+  freezed: ^3.0.6
   build_runner: ^2.1.2
 
 msix_config:

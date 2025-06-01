@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:tipitaka_pali/ui/screens/home/search_page/easy_number_input.dart';
 import '../../../../services/prefs.dart';
 import '../screens/home/search_page/search_page.dart';

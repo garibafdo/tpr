@@ -11,7 +11,7 @@ import 'package:tipitaka_pali/data/constants.dart';
 import 'package:tipitaka_pali/providers/initial_setup_notifier.dart';
 import 'package:tipitaka_pali/services/database/database_helper.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:tipitaka_pali/services/repositories/bookmark_repo.dart';
 
 //singleton model so setup will only get called one time in constructor

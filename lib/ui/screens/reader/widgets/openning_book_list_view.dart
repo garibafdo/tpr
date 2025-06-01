@@ -6,7 +6,7 @@ import '../../../../business_logic/models/book.dart';
 import '../../../../services/provider/script_language_provider.dart';
 import '../../../../utils/pali_script.dart';
 import 'package:tipitaka_pali/ui/widgets/colored_text.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 class OpenningBookListView extends StatelessWidget {
   const OpenningBookListView({super.key});

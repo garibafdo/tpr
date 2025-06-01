@@ -15,7 +15,7 @@ import '../../../../utils/pali_script.dart';
 import '../controller/reader_view_controller.dart';
 import 'pali_page_widget.dart';
 import 'vertical_book_slider.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 class VerticalBookView extends StatefulWidget {
   const VerticalBookView(

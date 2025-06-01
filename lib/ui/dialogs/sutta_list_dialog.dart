@@ -11,7 +11,7 @@ import '../../utils/pali_script.dart';
 import '../../utils/pali_script_converter.dart';
 import 'sutta_list_dialog_view_controller.dart';
 import '../screens/home/widgets/search_bar.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 //import 'package:flutter/src/material/search_anchor.dart';
 
 class SuttaListDialog extends StatefulWidget {

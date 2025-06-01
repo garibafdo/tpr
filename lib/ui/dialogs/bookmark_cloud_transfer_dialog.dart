@@ -7,7 +7,7 @@ import 'package:tipitaka_pali/services/prefs.dart';
 import 'package:tipitaka_pali/services/repositories/bookmark_fire_repo.dart';
 import 'package:tipitaka_pali/services/repositories/bookmark_repo.dart';
 import 'package:tipitaka_pali/ui/widgets/colored_text.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 class BookmarkCloudTransferDialog extends StatefulWidget {
   const BookmarkCloudTransferDialog({super.key});

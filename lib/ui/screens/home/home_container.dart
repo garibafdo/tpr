@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 import '../../../providers/navigation_provider.dart';
@@ -23,10 +23,9 @@ class Home extends StatelessWidget {
     return CallbackShortcuts(
       bindings: {
         SingleActivator(LogicalKeyboardKey.keyW,
-            meta: Platform.isMacOS ? true : false,
-            control:
-                Platform.isWindows || Platform.isLinux ? true : false): () =>
-            context.read<OpenningBooksProvider>().remove(),
+                meta: Platform.isMacOS ? true : false,
+                control: Platform.isWindows || Platform.isLinux ? true : false):
+            () => context.read<OpenningBooksProvider>().remove(),
       },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: FlexColorScheme.themedSystemNavigationBar(
@@ -43,20 +42,18 @@ class Home extends StatelessWidget {
               onWillPop: () async {
                 return await _onWillPop(context);
               },
-              child: Builder(
-                builder: (context) {
-                  return Scaffold(
-                      body: PlatformInfo.isDesktop || Mobile.isTablet(context)
-                          ? const DesktopHomeView()
-                          : const DetailNavigationPane(
-                              navigationCount: 5,
-                            ),
-                      bottomNavigationBar:
-                          !(PlatformInfo.isDesktop || Mobile.isTablet(context))
-                              ? const MobileNavigationBar()
-                              : null);
-                }
-              ),
+              child: Builder(builder: (context) {
+                return Scaffold(
+                    body: PlatformInfo.isDesktop || Mobile.isTablet(context)
+                        ? const DesktopHomeView()
+                        : const DetailNavigationPane(
+                            navigationCount: 5,
+                          ),
+                    bottomNavigationBar:
+                        !(PlatformInfo.isDesktop || Mobile.isTablet(context))
+                            ? const MobileNavigationBar()
+                            : null);
+              }),
             ),
           ),
         ),
