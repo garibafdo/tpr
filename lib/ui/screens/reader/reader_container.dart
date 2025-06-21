@@ -117,24 +117,21 @@ class _ReaderContainerState extends State<ReaderContainer> {
       final script = context.watch<ScriptLanguageProvider>().currentScript;
       final fontName = FontUtils.getfontName(script: script);
 
+      final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
+
       return Container(
-        color: const Color(0xfffbf0da),
+        color: Prefs.getChosenColor(context),
         child: Center(
           child: Text(
             PaliScript.getScriptOf(
-              script: context.watch<ScriptLanguageProvider>().currentScript,
-              romanText: ('''
-Sabbapāpassa akaraṇaṃ
-Kusalassa upasampadā
-Sacittapa⁠riyodāpanaṃ
-Etaṃ buddhānasāsanaṃ
-'''),
-            ),
+                script: context.watch<ScriptLanguageProvider>().currentScript,
+                romanText:
+                    "Sabbapāpassa akaraṇaṃ\nKusalassa upasampadā\nSacittapariyodāpanaṃ\nEtaṃ buddhānasāsanaṃ"),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 22,
               fontFamily: fontName,
-              color: Colors.brown,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -22,10 +22,10 @@ class InteractiveHtmlText extends StatelessWidget {
 
     final themeNotifier = context.watch<ThemeChangeNotifier>();
     final mediumTheme = themeNotifier.themeData.colorScheme.surfaceVariant;
-    final backgroundColor = switch (Prefs.selectedPageColor) {
-      0 => Colors.white,
-      1 => mediumTheme, // 🟢 burgundy pink medium color
-      2 => Colors.black,
+    final backgroundColor = switch (Prefs.selectedPageTheme) {
+      PageTheme.light => Colors.white,
+      PageTheme.medium => mediumTheme,
+      PageTheme.dark => Colors.black,
       _ => Colors.white,
     };
 

@@ -122,11 +122,10 @@ class ReaderView extends StatelessWidget implements Searchable {
     final borderColor =
         themeNotifier.themeData.colorScheme.inverseSurface.getShadeColor();
     final mediumTheme = themeNotifier.themeData.colorScheme.surfaceVariant;
-    final backgroundColor = switch (Prefs.selectedPageColor) {
-      0 => Colors.white,
-      1 => mediumTheme, //
-      2 => Colors.black,
-      _ => Colors.white,
+    final backgroundColor = switch (Prefs.selectedPageTheme) {
+      PageTheme.light => Colors.white,
+      PageTheme.medium => mediumTheme,
+      PageTheme.dark => Colors.black,
     };
 
     final showSearch = context.select<ReaderViewController, bool>(

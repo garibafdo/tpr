@@ -11,7 +11,6 @@ class ThemeChangeNotifier extends ChangeNotifier {
   // ignore: unused_field
   int _themeIndex = 1;
   bool _useM3 = true;
-  final List<bool> _isSelected = [true, false, false];
 
   set useM3(bool val) {
     _useM3 = val;
@@ -23,27 +22,22 @@ class ThemeChangeNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<bool> get isSelected {
-    for (int x = 0; x < _isSelected.length; x++) {
-      _isSelected[x] = x == Prefs.selectedPageColor;
-    }
-    return _isSelected;
-  }
+  List<bool> get isSelected => List.generate(
+        PageTheme.values.length,
+        (i) => i == Prefs.selectedPageTheme.index,
+      );
 
   bool get isDarkMode => themeMode == ThemeMode.dark;
 
-  void toggleTheme(int index) async {
-    Prefs.selectedPageColor = index;
+  void toggleTheme(PageTheme theme) {
+    Prefs.selectedPageTheme = theme;
 
-    if (index == 2) {
+    if (theme == PageTheme.dark) {
       themeMode = ThemeMode.dark;
       Prefs.darkThemeOn = true;
     } else {
       themeMode = ThemeMode.light;
       Prefs.darkThemeOn = false;
-    }
-    for (int i = 0; i < _isSelected.length; i++) {
-      _isSelected[i] = i == index;
     }
 
     notifyListeners();

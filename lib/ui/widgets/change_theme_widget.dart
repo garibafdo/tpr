@@ -21,7 +21,7 @@ class ChangeThemeWidget extends StatelessWidget {
         final provider =
             Provider.of<ThemeChangeNotifier>(context, listen: false);
         Prefs.darkThemeOn = value;
-        provider.toggleTheme(Prefs.selectedPageColor); // not used.. old cod
+        provider.toggleTheme(Prefs.selectedPageTheme); // not used.. old cod
       },
     );
   }

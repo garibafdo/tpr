@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:tipitaka_pali/services/prefs.dart';
 import 'package:tipitaka_pali/services/provider/bookmark_provider.dart';
 import 'package:tipitaka_pali/services/provider/theme_change_notifier.dart';
 import 'package:tipitaka_pali/ui/screens/settings/sync_settings.dart';
@@ -62,8 +63,9 @@ class DarkModeSettingView extends StatelessWidget {
       trailing: Consumer<ThemeChangeNotifier>(
           builder: ((context, themeChangeNotifier, child) => ToggleButtons(
                 onPressed: (int index) {
-                  Provider.of<ThemeChangeNotifier>(context, listen: false)
-                      .toggleTheme(index);
+                  final themeNotifier =
+                      Provider.of<ThemeChangeNotifier>(context, listen: false);
+                  themeNotifier.toggleTheme(PageTheme.values[index]);
                 },
                 isSelected: context.read<ThemeChangeNotifier>().isSelected,
                 children: const <Widget>[

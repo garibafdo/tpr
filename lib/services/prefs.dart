@@ -9,6 +9,12 @@ import 'package:tipitaka_pali/utils/simple_encryptor.dart';
 
 import '../data/constants.dart';
 
+enum PageTheme {
+  light,
+  medium,
+  dark,
+}
+
 // preference names
 const String localeValPref = "localeVal";
 const String themeIndexPref = "themeIndex";
@@ -249,10 +255,11 @@ class Prefs {
   static bool get isDpdOn => instance.getBool(isDpdPref) ?? defaultIsDpdOn;
   static set isDpdOn(bool value) => instance.setBool(isDpdPref, value);
 
-  static int get selectedPageColor =>
-      instance.getInt(selectedPageColorPref) ?? defaultSelectedPageColor;
-  static set selectedPageColor(int value) =>
-      instance.setInt(selectedPageColorPref, value);
+  static PageTheme get selectedPageTheme =>
+      PageTheme.values[instance.getInt(selectedPageColorPref) ?? 0];
+
+  static set selectedPageTheme(PageTheme theme) =>
+      instance.setInt(selectedPageColorPref, theme.index);
 
   static String get databaseDirPath =>
       instance.getString(databaseDirPathPref) ?? defaultDatabaseDirPath;
@@ -464,17 +471,13 @@ class Prefs {
   // Helpers
 
   static Color getChosenColor(BuildContext context) {
-    switch (Prefs.selectedPageColor) {
-      case 0:
-        return (Color(Colors.white.value));
-      case 1:
-        return Theme.of(context)
-            .colorScheme
-            .surfaceVariant; // ?? (const Color(seypia));
-      case 2:
-        return (Color(Colors.black.value));
-      default:
-        return Color(Colors.white.value);
+    switch (Prefs.selectedPageTheme) {
+      case PageTheme.light:
+        return Colors.white;
+      case PageTheme.medium:
+        return Theme.of(context).colorScheme.surfaceContainer;
+      case PageTheme.dark:
+        return Colors.black;
     }
   }
 
