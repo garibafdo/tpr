@@ -37,7 +37,7 @@ class MATButton extends StatelessWidget {
       width: 24,
       child: TextButton(
         style: ButtonStyle(
-            padding: MaterialStateProperty.all(const EdgeInsets.all(0))),
+            padding: WidgetStateProperty.all(const EdgeInsets.all(0))),
         onPressed: onPressed,
         child: Text(label),
       ),

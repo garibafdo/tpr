@@ -1,9 +1,4 @@
-import 'package:firedart/auth/firebase_auth.dart';
-import 'package:firedart/auth/token_store.dart';
-import 'package:firedart/firestore/firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 import 'package:tipitaka_pali/app.dart';
@@ -30,7 +25,7 @@ void main() async {
   await Prefs.init();
   // async calling of setup of firestore below
   setupFirestore();
-  
+
   // This view is only called one time.
   // before the select language and before the select script are created
   // set the prefs to the current local if any OS but Win (not supported.)

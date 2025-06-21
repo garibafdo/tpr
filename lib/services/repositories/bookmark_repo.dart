@@ -30,8 +30,7 @@ class BookmarkDatabaseRepository extends BookmarkRepository {
       'note': bookmark.note,
       'selected_text': bookmark.selectedText,
       'name': bookmark.name,
-      'folder_id':
-          bookmark.folderId ?? -1, // Use -1 or another value for default
+      'folder_id': bookmark.folderId, // Use -1 or another value for default
       // Do not include 'id' here as SQLite will auto-increment it
     };
 

@@ -138,8 +138,7 @@ class _HelpAboutViewState extends State<HelpAboutView> {
               hoverColor: Theme.of(context).hoverColor,
               onTap: () {
                 final InAppReview inAppReview = InAppReview.instance;
-                inAppReview.openStoreListing(
-                    appStoreId: '1541426949', microsoftStoreId: '9MTH9TD82TGR');
+                inAppReview.openStoreListing();
               },
             ),
           );

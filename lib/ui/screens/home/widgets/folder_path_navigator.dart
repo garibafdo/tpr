@@ -6,10 +6,10 @@ class FolderPathNavigator extends StatelessWidget {
   final Function(Folder) onFolderTap;
 
   const FolderPathNavigator({
-    Key? key,
+    super.key,
     required this.path,
     required this.onFolderTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

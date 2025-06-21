@@ -7,10 +7,8 @@ import 'package:tipitaka_pali/services/repositories/bookmark_repo.dart';
 
 class BookmarkSyncRepo {
   BookmarkSyncRepo(DatabaseHelper databaseHelper, this.dao)
-      : _databaseHelper = databaseHelper ?? DatabaseHelper(),
-        _sqlRepo = BookmarkDatabaseRepository(databaseHelper),
+      : _sqlRepo = BookmarkDatabaseRepository(databaseHelper),
         _fireRepo = BookmarkFireRepository();
-  final DatabaseHelper _databaseHelper;
   final BookmarkDao dao;
 
   final BookmarkRepository _sqlRepo;

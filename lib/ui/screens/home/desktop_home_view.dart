@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 import 'package:tipitaka_pali/data/constants.dart';
 import 'package:tipitaka_pali/providers/navigation_provider.dart';
 import 'package:tipitaka_pali/services/prefs.dart';
-import 'package:tipitaka_pali/services/rx_prefs.dart';
-
-import '../../../data/flex_theme_data.dart';
-import '../../widgets/my_vertical_divider.dart';
 import '../reader/reader_container.dart';
 import 'dekstop_navigation_bar.dart';
 import 'navigation_pane.dart';

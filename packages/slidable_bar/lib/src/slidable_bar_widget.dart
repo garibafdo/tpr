@@ -50,7 +50,7 @@ class SlidableBar extends StatefulWidget {
   final SlidableBarController? slidableController;
 
   const SlidableBar(
-      {Key? key,
+      {super.key,
       required this.child,
       // required this.barChildren,
       required this.barContent,
@@ -65,8 +65,7 @@ class SlidableBar extends StatefulWidget {
       this.clickerSize = 55,
       this.curve = Curves.linear,
       this.slidableController,
-      this.barRadius})
-      : super(key: key);
+      this.barRadius});
 
   @override
   _SlidableSideBarState createState() => _SlidableSideBarState();
@@ -151,7 +150,7 @@ class _SlidableSideBarState extends State<SlidableBar> {
                           height: widget.clickerSize,
                           decoration: BoxDecoration(
                               color: widget.backgroundColor ??
-                                  Theme.of(context).colorScheme.onBackground,
+                                  Theme.of(context).colorScheme.onSurface,
                               borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(7)),
                               boxShadow: const [
@@ -244,7 +243,7 @@ class _SideBarContent extends StatelessWidget {
   final BorderRadius? barRadius;
 
   const _SideBarContent({
-    Key? key,
+    super.key,
     // required this.children,
     required this.barContent,
     required this.isOpen,
@@ -256,7 +255,7 @@ class _SideBarContent extends StatelessWidget {
     required this.clickerPosition,
     required this.side,
     required this.barRadius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -267,7 +266,7 @@ class _SideBarContent extends StatelessWidget {
         boxShadow: const [
           BoxShadow(color: Colors.black12, spreadRadius: 0, blurRadius: 5),
         ],
-        color: backgroundColor ?? Theme.of(context).colorScheme.onBackground,
+        color: backgroundColor ?? Theme.of(context).colorScheme.onSurface,
         borderRadius: barRadius,
       ),
       clipBehavior: Clip.antiAlias,

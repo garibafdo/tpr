@@ -705,14 +705,14 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
     if (googleTranslatePattern.hasMatch(definitionText)) {
       confidence = "Google Translation";
       // Split at "Google Translate" to separate breakup and definition
-      List<String> parts = definitionText!.split("Google Translate");
+      List<String> parts = definitionText.split("Google Translate");
       breakup = parts[0].trim();
       cleanedDefinition = parts.length > 1 ? parts[1].trim() : '';
     } else {
       // Handle regular "CL=" case
-      RegExpMatch? clMatch = clPattern.firstMatch(definitionText ?? '');
+      RegExpMatch? clMatch = clPattern.firstMatch(definitionText);
       confidence = clMatch != null ? clMatch.group(1)! : 'Unknown';
-      List<String> parts = definitionText!.split(clPattern);
+      List<String> parts = definitionText.split(clPattern);
       breakup = parts[0].trim();
       cleanedDefinition = parts.length > 1 ? parts[1].trim() : '';
     }

@@ -11,7 +11,6 @@ import '../../../../services/prefs.dart';
 import '../../../../services/repositories/search_history_repo.dart';
 import '../../../../utils/pali_script.dart';
 import '../../../../utils/pali_script_converter.dart';
-import '../../../../utils/platform_info.dart';
 import '../../../../utils/script_detector.dart';
 import '../../../widgets/search_type_segmented_widget.dart';
 import '../widgets/search_bar.dart';

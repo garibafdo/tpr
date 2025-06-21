@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:tipitaka_pali/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
-import '../../../providers/navigation_provider.dart';
 import '../../../utils/platform_info.dart';
 import 'desktop_home_view.dart';
 import 'mobile_navigation_bar.dart';

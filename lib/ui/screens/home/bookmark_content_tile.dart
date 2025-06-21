@@ -7,11 +7,11 @@ class BookmarkContentTile extends StatelessWidget {
   final VoidCallback? onDelete;
 
   const BookmarkContentTile({
-    Key? key,
+    super.key,
     required this.content,
     this.onTap,
     this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

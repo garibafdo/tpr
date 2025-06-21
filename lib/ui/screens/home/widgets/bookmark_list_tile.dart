@@ -12,8 +12,7 @@ class BookmarkListTile extends StatelessWidget {
   // final int index;
 
   const BookmarkListTile(
-      {Key? key, required this.bookmark, this.onTap, this.onDelete})
-      : super(key: key);
+      {super.key, required this.bookmark, this.onTap, this.onDelete});
   final Bookmark bookmark;
   final Function(Bookmark bookmark)? onDelete;
   final Function(Bookmark bookmark)? onTap;

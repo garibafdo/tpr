@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:firedart/auth/user_gateway.dart';
 import 'package:flutter/material.dart';
 import 'package:firedart/firedart.dart';
