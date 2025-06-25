@@ -231,5 +231,8 @@
       "error": {}
     }
   },
-  "shareSubject": "Pāḷi text from TPR"
+"shareSubject": "Pāḷi text from TPR",
+"importEpub": "Import EPUB Book",
+"selectAnEpubFileToImport": "Select an EPUB file to import into TPR.",
+"selectFile": "Select File"
 }

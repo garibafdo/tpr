@@ -6,6 +6,7 @@ import 'package:tipitaka_pali/ui/screens/home/home_container.dart';
 import 'package:tipitaka_pali/ui/screens/home/search_page/search_page.dart';
 import 'package:tipitaka_pali/ui/screens/reader/reader.dart';
 import 'package:tipitaka_pali/ui/screens/search_result/search_result_page.dart';
+import 'package:tipitaka_pali/ui/screens/settings/book_import_view.dart';
 import 'package:tipitaka_pali/ui/screens/settings/download_view.dart';
 import 'package:tipitaka_pali/ui/screens/settings/settings.dart';
 import 'package:tipitaka_pali/ui/screens/splash_screen.dart';
@@ -73,6 +74,9 @@ class RouteGenerator {
         screen = const ExtensionPromptDialog(
           message: '',
         );
+        break;
+      case '/book-import-view':
+        screen = const BookImportView();
         break;
       case '/download-view':
         screen = const DownloadView();

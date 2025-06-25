@@ -44,17 +44,17 @@ class BookDatabaseRepository implements BookRepository {
   }
 
   @override
-  Future<int> getFirstPage(String id) async{
-      final db = await databaseProvider.database;
+  Future<int> getFirstPage(String id) async {
+    final db = await databaseProvider.database;
     List<Map> maps = await db.query(dao.tableName,
         columns: [dao.columnFirstPage],
         where: '${dao.columnID} = ?',
         whereArgs: [id]);
     return maps.first[dao.columnFirstPage];
-    }
-  
-    @override
-    Future<int> getLastPage(String id) async{
+  }
+
+  @override
+  Future<int> getLastPage(String id) async {
     final db = await databaseProvider.database;
     List<Map> maps = await db.query(dao.tableName,
         columns: [dao.columnLastPage],
