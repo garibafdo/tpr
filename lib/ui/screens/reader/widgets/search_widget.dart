@@ -74,6 +74,14 @@ class _SearchWidgetState extends State<SearchWidget> {
   }
 
   @override
+  void didUpdateWidget(covariant SearchWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    Future.microtask(() {
+      _controller.text = widget.word ?? '';
+    });
+  }
+
+  @override
   void dispose() {
     super.dispose();
     _controller.dispose();

@@ -56,22 +56,10 @@ class Reader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     myLogger.i('calling Reader build method');
-    // logger.i('pass parameter: book: ${book.id} --- ${book.name}');
-    // logger.i('current Page in Reader Screen: $currentPage');
-    // logger.i('textToHighlight in Reader Screen: $textToHighlight');
     final openedBookProvider = context.read<OpenningBooksProvider>();
     final combo = openedBookProvider.books.map((e) => e['book'].id).join('-');
     return ChangeNotifierProvider<ReaderViewController>(
-      // this key prevents a refresh and the refresh is needed for this
-      // no highlight bug to not show up.
-      // open 2 book in two tabs, close one tab.. the remaining tab will
-      // not allow highlighting if key(book.id) code is there.
-      // it is good in many cases, but a bug somewhere causes
-      // the highlight to fail
-      // TODO try to fix this bug later
-      //////////////////////////////////
       key: Key('${book.id}@$combo'),
-      ////////////////////////
       create: (context) => ReaderViewController(
           context: context,
           bookRepository: BookDatabaseRepository(DatabaseHelper()),
@@ -98,8 +86,8 @@ class ReaderView extends StatelessWidget implements Searchable {
   @override
   void onSearchRequested(BuildContext context) {
     debugPrint('on search requested');
-    Provider.of<ReaderViewController>(context, listen: false)
-        .showSearchWidget(true);
+    final rc = Provider.of<ReaderViewController>(context, listen: false);
+    rc.showSearchWidget(true, searchText: "");
   }
 
   @override
@@ -119,24 +107,10 @@ class ReaderView extends StatelessWidget implements Searchable {
 
   Widget _getReader(BuildContext context) {
     final themeNotifier = context.watch<ThemeChangeNotifier>();
-    final borderColor =
-        themeNotifier.themeData.colorScheme.inverseSurface.getShadeColor();
-    final mediumTheme = themeNotifier.themeData.colorScheme.surfaceVariant;
-    final backgroundColor = switch (Prefs.selectedPageTheme) {
-      PageTheme.light => Colors.white,
-      PageTheme.medium => mediumTheme,
-      PageTheme.dark => Colors.black,
-    };
-
-    final showSearch = context.select<ReaderViewController, bool>(
-        (controller) => controller.showSearch);
-
     final isLoaded = context.select<ReaderViewController, bool>(
         (controller) => controller.isloadingFinished);
 
     if (!isLoaded) {
-      // display fade loading
-      // circular progessing is somehow annoying
       return const Material(
         child: Center(
           child: Text('. . .'),
@@ -159,151 +133,287 @@ class ReaderView extends StatelessWidget implements Searchable {
               backgroundColor: Colors.blue.withOpacity(0.3),
               clickerSize: 32,
               clickerPosition: 0.98,
-              child: LayoutBuilder(
-                builder: (context, constraints) => SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Column(
-                        children: [
-                          if (showSearch)
-                            SearchWidget(
-                              word: context
-                                  .read<ReaderViewController>()
-                                  .searchText
-                                  .value,
-                            ),
-                          ValueListenableBuilder<String?>(
-                            valueListenable: context
-                                .read<ReaderViewController>()
-                                .aiTranslationHtml,
-                            builder: (context, html, _) {
-                              if (html == null || html.isEmpty) {
-                                return const SizedBox();
-                              }
-                              return Container(
-                                margin: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: backgroundColor,
-                                  border: Border.all(color: borderColor),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      AppLocalizations.of(context)!.aiContext,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    InteractiveHtmlText(
-                                      html: html,
-                                      onWordTap: (word) =>
-                                          _onClickedWord(word, context),
-                                    ),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: TextButton.icon(
-                                        icon: const Icon(Icons.close),
-                                        label: Text(
-                                            AppLocalizations.of(context)!.hide),
-                                        onPressed: () => context
-                                            .read<ReaderViewController>()
-                                            .aiTranslationHtml
-                                            .value = null,
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
-                          ValueListenableBuilder<bool>(
-                            valueListenable: context
-                                .read<ReaderViewController>()
-                                .isTranslating,
-                            builder: (context, isLoading, _) {
-                              if (!isLoading) return const SizedBox.shrink();
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 24),
-                                child: Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const CircularProgressIndicator(),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        AppLocalizations.of(context)!.aiContext,
-                                        style: const TextStyle(
-                                            fontStyle: FontStyle.italic),
-                                      ),
-                                    ],
+              child: Stack(
+                children: [
+                  // Main content
+                  LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: ConstrainedBox(
+                        constraints:
+                            BoxConstraints(minHeight: constraints.maxHeight),
+                        child: IntrinsicHeight(
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.8,
+                            child: bookViewMode == BookViewMode.horizontal
+                                ? VerticalBookView(
+                                    onSearchedSelectedText: (text) =>
+                                        _onSearchSelectedText(text, context),
+                                    onSharedSelectedText: _onShareSelectedText,
+                                    onClickedWord: (word) =>
+                                        _onClickedWord(word, context),
+                                    onSearchedInCurrentBook: (text) =>
+                                        _onClickedSearchInCurrent(
+                                            context, text),
+                                    onAiContextRightClick: (text) =>
+                                        _onAiContextRightClick(text, context),
+                                    onSelectionChanged: (text) {
+                                      Provider.of<ReaderViewController>(context,
+                                              listen: false)
+                                          .selection = text;
+                                    },
+                                  )
+                                : HorizontalBookView(
+                                    onSearchedSelectedText: (text) =>
+                                        _onSearchSelectedText(text, context),
+                                    onSharedSelectedText: _onShareSelectedText,
+                                    onClickedWord: (word) =>
+                                        _onClickedWord(word, context),
+                                    onSearchedInCurrentBook: (text) =>
+                                        _onClickedSearchInCurrent(
+                                            context, text),
+                                    onAiContextRightClick: (text) =>
+                                        _onAiContextRightClick(text, context),
+                                    onSelectionChanged: (text) {
+                                      Provider.of<ReaderViewController>(context,
+                                              listen: false)
+                                          .selection = text;
+                                    },
                                   ),
-                                ),
-                              );
-                            },
                           ),
-                          Flexible(
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.8,
-                              child: bookViewMode == BookViewMode.horizontal
-                                  ? VerticalBookView(
-                                      onSearchedSelectedText: (text) =>
-                                          _onSearchSelectedText(text, context),
-                                      onSharedSelectedText:
-                                          _onShareSelectedText,
-                                      onClickedWord: (word) =>
-                                          _onClickedWord(word, context),
-                                      onSearchedInCurrentBook: (text) =>
-                                          _onClickedSearchInCurrent(
-                                              context, text),
-                                      onAiContextRightClick: (text) =>
-                                          _onAiContextRightClick(text, context),
-                                      onSelectionChanged: (text) {
-                                        Provider.of<ReaderViewController>(
-                                                context,
-                                                listen: false)
-                                            .selection = text;
-                                      },
-                                    )
-                                  : HorizontalBookView(
-                                      onSearchedSelectedText: (text) =>
-                                          _onSearchSelectedText(text, context),
-                                      onSharedSelectedText:
-                                          _onShareSelectedText,
-                                      onClickedWord: (word) =>
-                                          _onClickedWord(word, context),
-                                      onSearchedInCurrentBook: (text) =>
-                                          _onClickedSearchInCurrent(
-                                              context, text),
-                                      onAiContextRightClick: (text) =>
-                                          _onAiContextRightClick(text, context),
-                                      onSelectionChanged: (text) {
-                                        Provider.of<ReaderViewController>(
-                                                context,
-                                                listen: false)
-                                            .selection = text;
-                                      },
-                                    ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+
+                  // Search Overlay
+                  _buildSearchOverlay(context),
+
+                  // Translation Overlay
+                  _buildTranslationOverlay(context),
+
+                  // Translation Loading Overlay
+                  _buildTranslationLoadingOverlay(context),
+                ],
               ),
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildSearchOverlay(BuildContext context) {
+    final showSearch = context.select<ReaderViewController, bool>(
+        (controller) => controller.showSearch);
+
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      top: showSearch ? 0 : -100,
+      left: 0,
+      right: 0,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 300),
+        opacity: showSearch ? 1.0 : 0.0,
+        child: Material(
+          elevation: 8,
+          shadowColor: Colors.black.withOpacity(0.3),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(16),
+            bottomRight: Radius.circular(16),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: SearchWidget(
+                word: context.watch<ReaderViewController>().searchText.value,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTranslationOverlay(BuildContext context) {
+    final themeNotifier = context.watch<ThemeChangeNotifier>();
+    final borderColor =
+        themeNotifier.themeData.colorScheme.inverseSurface.getShadeColor();
+    final mediumTheme = themeNotifier.themeData.colorScheme.surfaceVariant;
+    final backgroundColor = switch (Prefs.selectedPageTheme) {
+      PageTheme.light => Colors.white,
+      PageTheme.medium => mediumTheme,
+      PageTheme.dark => Colors.black,
+    };
+
+    return ValueListenableBuilder<String?>(
+      valueListenable: context.read<ReaderViewController>().aiTranslationHtml,
+      builder: (context, html, _) {
+        final showTranslation = html != null && html.isNotEmpty;
+
+        return AnimatedPositioned(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOutCubic,
+          top: showTranslation ? 80 : -400,
+          left: 12,
+          right: 12,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: showTranslation ? 1.0 : 0.0,
+            child: Material(
+              elevation: 12,
+              shadowColor: Colors.black.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                ),
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  border: Border.all(color: borderColor),
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      backgroundColor,
+                      backgroundColor.withOpacity(0.95),
+                    ],
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header with drag handle
+                    Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+
+                    // Content
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  size: 20,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.of(context)!.aiContext,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () => context
+                                      .read<ReaderViewController>()
+                                      .aiTranslationHtml
+                                      .value = null,
+                                  tooltip: AppLocalizations.of(context)!.hide,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            InteractiveHtmlText(
+                              html: html ?? '',
+                              onWordTap: (word) =>
+                                  _onClickedWord(word, context),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTranslationLoadingOverlay(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: context.read<ReaderViewController>().isTranslating,
+      builder: (context, isLoading, _) {
+        return AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          top: isLoading ? MediaQuery.of(context).size.height * 0.4 : -200,
+          left: 0,
+          right: 0,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: isLoading ? 1.0 : 0.0,
+            child: Center(
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  constraints: BoxConstraints(
+                    // Flexible constraints
+                    minWidth: 150,
+                    maxWidth: MediaQuery.of(context).size.width * 0.6,
+                  ),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        AppLocalizations.of(context)!.aiContext,
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Theme.of(context).textTheme.bodyMedium?.color,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -440,7 +550,12 @@ class ReaderView extends StatelessWidget implements Searchable {
   Future<void> _onAiContextRightClick(String text, BuildContext context) async {
     if (text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No text selected for translation.')),
+        SnackBar(
+          content: const Text('No text selected for translation.'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
       return;
     }
@@ -542,7 +657,12 @@ Note: Only the first 1000 characters were sent for translation.
       };
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Exception: $e')),
+        SnackBar(
+          content: Text('Exception: $e'),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
       return {
         'text':
