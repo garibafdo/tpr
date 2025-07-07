@@ -49,5 +49,9 @@
 	<string>Tipitaka Pali Reader would like to access your files for flashcards.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>This app needs access to import EPUB files and export bookmarks.</string>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
 </dict>
 </plist>
