@@ -18,3 +18,5 @@ chmod +x TipitakaPaliReader.AppDir/tipitaka_pali_reader
 # Build the AppImage
 #ARCH=x86_64 ./appimagetool-x86_64.AppImage TipitakaPaliReader.AppDir/ tipitaka_pali_reader.AppImage
 ./appimagetool-x86_64.AppImage TipitakaPaliReader.AppDir/ tipitaka_pali_reader.AppImage
+
+cp tipitaka_pali_reader.AppImage ~/Desktop/TPR/
