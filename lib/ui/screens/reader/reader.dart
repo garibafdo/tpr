@@ -136,58 +136,78 @@ class ReaderView extends StatelessWidget implements Searchable {
               child: Stack(
                 children: [
                   // Main content
-                  LayoutBuilder(
-                    builder: (context, constraints) => SingleChildScrollView(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(minHeight: constraints.maxHeight),
-                        child: IntrinsicHeight(
-                          child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.8,
-                            child: bookViewMode == BookViewMode.horizontal
-                                ? VerticalBookView(
-                                    onSearchedSelectedText: (text) =>
-                                        _onSearchSelectedText(text, context),
-                                    onSharedSelectedText: _onShareSelectedText,
-                                    onClickedWord: (word) =>
-                                        _onClickedWord(word, context),
-                                    onSearchedInCurrentBook: (text) =>
-                                        _onClickedSearchInCurrent(
-                                            context, text),
-                                    onAiContextRightClick: (text) =>
-                                        _onAiContextRightClick(text, context),
-                                    onSelectionChanged: (text) {
-                                      Provider.of<ReaderViewController>(context,
-                                              listen: false)
-                                          .selection = text;
-                                    },
-                                  )
-                                : HorizontalBookView(
-                                    onSearchedSelectedText: (text) =>
-                                        _onSearchSelectedText(text, context),
-                                    onSharedSelectedText: _onShareSelectedText,
-                                    onClickedWord: (word) =>
-                                        _onClickedWord(word, context),
-                                    onSearchedInCurrentBook: (text) =>
-                                        _onClickedSearchInCurrent(
-                                            context, text),
-                                    onAiContextRightClick: (text) =>
-                                        _onAiContextRightClick(text, context),
-                                    onSelectionChanged: (text) {
-                                      Provider.of<ReaderViewController>(context,
-                                              listen: false)
-                                          .selection = text;
-                                    },
-                                  ),
+                  Column(
+                    children: [
+                      if (context.watch<ReaderViewController>().showSearch)
+                        SearchWidget(
+                          word: context
+                              .watch<ReaderViewController>()
+                              .searchText
+                              .value,
+                        ),
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) =>
+                              SingleChildScrollView(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight),
+                              child: IntrinsicHeight(
+                                child: SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.8,
+                                  child: bookViewMode == BookViewMode.horizontal
+                                      ? VerticalBookView(
+                                          onSearchedSelectedText: (text) =>
+                                              _onSearchSelectedText(
+                                                  text, context),
+                                          onSharedSelectedText:
+                                              _onShareSelectedText,
+                                          onClickedWord: (word) =>
+                                              _onClickedWord(word, context),
+                                          onSearchedInCurrentBook: (text) =>
+                                              _onClickedSearchInCurrent(
+                                                  context, text),
+                                          onAiContextRightClick: (text) =>
+                                              _onAiContextRightClick(
+                                                  text, context),
+                                          onSelectionChanged: (text) {
+                                            Provider.of<ReaderViewController>(
+                                                    context,
+                                                    listen: false)
+                                                .selection = text;
+                                          },
+                                        )
+                                      : HorizontalBookView(
+                                          onSearchedSelectedText: (text) =>
+                                              _onSearchSelectedText(
+                                                  text, context),
+                                          onSharedSelectedText:
+                                              _onShareSelectedText,
+                                          onClickedWord: (word) =>
+                                              _onClickedWord(word, context),
+                                          onSearchedInCurrentBook: (text) =>
+                                              _onClickedSearchInCurrent(
+                                                  context, text),
+                                          onAiContextRightClick: (text) =>
+                                              _onAiContextRightClick(
+                                                  text, context),
+                                          onSelectionChanged: (text) {
+                                            Provider.of<ReaderViewController>(
+                                                    context,
+                                                    listen: false)
+                                                .selection = text;
+                                          },
+                                        ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-
-                  // Search Overlay
-                  _buildSearchOverlay(context),
 
                   // Translation Overlay
                   _buildTranslationOverlay(context),
@@ -199,40 +219,6 @@ class ReaderView extends StatelessWidget implements Searchable {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildSearchOverlay(BuildContext context) {
-    final showSearch = context.select<ReaderViewController, bool>(
-        (controller) => controller.showSearch);
-
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      top: showSearch ? 0 : -100,
-      left: 0,
-      right: 0,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: showSearch ? 1.0 : 0.0,
-        child: Material(
-          elevation: 8,
-          shadowColor: Colors.black.withOpacity(0.3),
-          borderRadius: const BorderRadius.only(
-            bottomLeft: Radius.circular(16),
-            bottomRight: Radius.circular(16),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: SearchWidget(
-                word: context.watch<ReaderViewController>().searchText.value,
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
