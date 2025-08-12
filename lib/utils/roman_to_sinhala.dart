@@ -1,5 +1,5 @@
-
 import 'unicode_pali_letters.dart';
+import 'package:characters/characters.dart';
 
 String toUni(String input) {
   if (input.isEmpty) return input;
@@ -442,11 +442,11 @@ String fromSin(String input) {
   while (i < input.length) {
     i1 = charAt(input, i);
 
-      if (vowel[i1] != null) {
-        if (output[output.length - 1] == 'a') {
-          output = output.substring(0, output.length - 1);
-        }
-      
+    if (vowel[i1] != null) {
+      if (output[output.length - 1] == 'a') {
+        output = output.substring(0, output.length - 1);
+      }
+
       output += vowel[i1];
     } else if (sinhala[i1] != null) {
       output += sinhala[i1] + 'a';
@@ -464,115 +464,191 @@ String fromSin(String input) {
   return output;
 }
 
+// ----------------  Roman Pāli ➜ Devanāgarī  ----------------
+// ------------------------------------------------------------
+//  Roman Pāli  ➜  Devanāgarī  (Hindi)
+// ------------------------------------------------------------
+
 String toDeva(String input) {
+  input = input.toLowerCase().replaceAll('ṁ', 'ṃ');
 
-  input = input.toLowerCase().replaceAll(r'ṁ', 'ṃ');
+  // 1.  independent vowel letters (full glyphs)
+  const iv = {
+    'a': 'अ',
+    'ā': 'आ',
+    'i': 'इ',
+    'ī': 'ई',
+    'u': 'उ',
+    'ū': 'ऊ',
+    'e': 'ए',
+    'o': 'ओ',
+  };
 
-  var vowel = {};
-  vowel['a'] = " अ";
-  vowel['i'] = " इ";
-  vowel['u'] = " उ";
-  vowel['ā'] = " आ";
-  vowel['ī'] = " ई";
-  vowel['ū'] = " ऊ";
-  vowel['e'] = " ए";
-  vowel['o'] = " ओ";
+  // 2.  dependent vowel signs (matras)
+  const mv = {
+    'ā': 'ा',
+    'i': 'ि',
+    'ī': 'ी',
+    'u': 'ु',
+    'ū': 'ू',
+    'e': 'े',
+    'o': 'ो',
+  };
 
-  var devar = {};
+  // 3.  single consonants
+  const sc = {
+    'k': 'क',
+    'g': 'ग',
+    'ṅ': 'ङ',
+    'c': 'च',
+    'j': 'ज',
+    'ñ': 'ञ',
+    'ṭ': 'ट',
+    'ḍ': 'ड',
+    'ṇ': 'ण',
+    't': 'त',
+    'd': 'द',
+    'n': 'न',
+    'p': 'प',
+    'b': 'ब',
+    'm': 'म',
+    'y': 'य',
+    'r': 'र',
+    'l': 'ल',
+    'ḷ': 'ळ',
+    'v': 'व',
+    's': 'स',
+    'h': 'ह',
+  };
 
-  devar['ā'] = 'ा';
-  devar['i'] = 'ि';
-  devar['ī'] = 'ी';
-  devar['u'] = 'ु';
-  devar['ū'] = 'ू';
-  devar['e'] = 'े';
-  devar['o'] = 'ो';
-  devar['ṃ'] = 'ं';
-  devar['k'] = 'क';
-  devar['kh'] = 'ख';
-  devar['g'] = 'ग';
-  devar['gh'] = 'घ';
-  devar['ṅ'] = 'ङ';
-  devar['c'] = 'च';
-  devar['ch'] = 'छ';
-  devar['j'] = 'ज';
-  devar['jh'] = 'झ';
-  devar['ñ'] = 'ञ';
-  devar['ṭ'] = 'ट';
-  devar['ṭh'] = 'ठ';
-  devar['ḍ'] = 'ड';
-  devar['ḍh'] = 'ढ';
-  devar['ṇ'] = 'ण';
-  devar['t'] = 'त';
-  devar['th'] = 'थ';
-  devar['d'] = 'द';
-  devar['dh'] = 'ध';
-  devar['n'] = 'न';
-  devar['p'] = 'प';
-  devar['ph'] = 'फ';
-  devar['b'] = 'ब';
-  devar['bh'] = 'भ';
-  devar['m'] = 'म';
-  devar['y'] = 'य';
-  devar['r'] = 'र';
-  devar['l'] = 'ल';
-  devar['ḷ'] = 'ळ';
-  devar['v'] = 'व';
-  devar['s'] = 'स';
-  devar['h'] = 'ह';
+  // 4.  aspirated digraphs
+  const asp = {
+    'kh': 'ख',
+    'gh': 'घ',
+    'ch': 'छ',
+    'jh': 'झ',
+    'ṭh': 'ठ',
+    'ḍh': 'ढ',
+    'th': 'थ',
+    'dh': 'ध',
+    'ph': 'फ',
+    'bh': 'भ',
+  };
 
-  var i0 = '';
-  var i1 = '';
-  var i2 = '';
-  var i3 = '';
-  var i4 = '';
-  var i5 = '';
-  var output = '';
-  var cons = 0;
-  var i = 0;
+  // 5.  geminated‑aspirated clusters (kkh, ggh …)
+  final gemAsp = {
+    for (var a in asp.entries)
+      '${a.key[0]}${a.key}': '${sc[a.key[0]]}्${a.value}',
+  };
 
-  input = input.replaceAll(r'\&quot;', '`');
+  // helper data
+  final indepVals = iv.values.toSet();
+  String out = '';
+  int i = 0;
+  bool prevWasCon = false; // previous Devanāgarī glyph is consonant
+
+  // helper to drop inherent‑a before adding a NEW consonant
+  void _killInherent() {
+    if (prevWasCon) {
+      out += '्'; // virama
+      prevWasCon = false;
+    }
+  }
+
+  String next(int o) => (i + o < input.length) ? input[i + o] : '';
 
   while (i < input.length) {
-    i0 = charAt(input, i - 1);
-    i1 = charAt(input, i);
-    i2 = charAt(input, i + 1);
-    i3 = charAt(input, i + 2);
-    i4 = charAt(input, i + 3);
-    i5 = charAt(input, i + 4);
+    final c1 = input[i];
+    final c2 = next(1);
+    final c3 = next(2);
 
-    if (i == 0 && vowel[i1] != null) { // first letter vowel
-      output += vowel[i1]!;
-      i += 1;
+    // ---------------- anusvāra ----------------
+    if (c1 == 'ṃ') {
+      out += 'ं';
+      prevWasCon = false;
+      i++;
+      continue;
+    }
 
-    } else if (i2 == 'h' && devar[i1+i2] !=null ) {		// two character match
-      output += devar[i1+i2];
-      if (i3.isNotEmpty && vowel[i3] == null && i2 != 'ṃ') {
-        output += '्';
-      }
+    // ---------- geminated‑aspirated (kkh …) ----
+    if (gemAsp.containsKey('$c1$c2$c3')) {
+      _killInherent();
+      out += gemAsp['$c1$c2$c3']!;
+      prevWasCon = true;
+      i += 3;
+      continue;
+    }
+
+    // ------------- aspirated digraph (kh …) ----
+    if (asp.containsKey('$c1$c2')) {
+      _killInherent();
+      out += asp['$c1$c2']!;
+      prevWasCon = true;
       i += 2;
+      continue;
+    }
 
-    } else if (devar[i1] != null) {	// one character match except a
-      output += devar[i1];
-      if (i2.isNotEmpty && vowel[i2] == null && vowel[i1] == null && i1 != 'ṃ') {
-        output += '्';
-      }
-      i++;
+    // ------------- doubled consonant (kk …) ----
+    if (c1 == c2 && sc.containsKey(c1)) {
+      _killInherent();
+      out += sc[c1]! + '्' + sc[c1]!;
+      prevWasCon = true;
+      i += 2;
+      continue;
+    }
 
-    } else if (i1 != 'a') {
-      output += i1;
+    // ------------- single consonant ------------
+    if (sc.containsKey(c1)) {
+      _killInherent();
+      out += sc[c1]!;
+      prevWasCon = true;
       i++;
-      if(vowel[i2] != null) {
-        output+=vowel[i2];
+      continue;
+    }
+
+    // ------------- vowels ----------------------
+    if (iv.containsKey(c1)) {
+      // special case: short “a”
+      if (c1 == 'a') {
+        if (!prevWasCon &&
+            (out.isEmpty || !indepVals.contains(out.characters.last))) {
+          out += iv['a']!; // only write अ when really needed
+        }
+        prevWasCon = false;
         i++;
+        continue;
       }
 
-    } else {
+      // if previous glyph is an independent vowel, new vowel MUST be independent
+      final prevIndV =
+          out.isNotEmpty && indepVals.contains(out.characters.last);
+      if (prevIndV) {
+        out += iv[c1]!;
+        prevWasCon = false;
+        i++;
+        continue;
+      }
+
+      // normal matra vs independent choice
+      if (prevWasCon && mv.containsKey(c1)) {
+        out += mv[c1]!;
+      } else {
+        out += iv[c1]!;
+      }
+      prevWasCon = false;
       i++;
-    } // a
+      continue;
+    }
+
+    // ------------- space / punctuation ---------
+    if (c1.trim().isEmpty) {
+      out += c1;
+    }
+    prevWasCon = false;
+    i++;
   }
-  output = output.replaceAll(r'\`+', '"');
-  return output;
+
+  return out;
 }
 
 String fromThai(String input) {
