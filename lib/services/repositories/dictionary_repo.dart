@@ -13,6 +13,7 @@ import '../../business_logic/models/dictionary_history.dart';
 import 'package:tipitaka_pali/business_logic/models/dpd_inflection.dart';
 
 import '../../business_logic/models/dpd_compound_family.dart';
+import '../../utils/pali_tools.dart';
 
 abstract class DictionaryRepository {
   Future<List<Definition>> getDefinition(String id);
@@ -482,12 +483,32 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
         list.add(x);
       }
     }
+
+    final filterWord = PaliTools.toPlain(word);
+    final sqlPlain = "SELECT word FROM words WHERE plain LIKE '$filterWord%' ORDER BY LENGTH(word), word ASC LIMIT 20;";
+    final mapPlain = await db.rawQuery(sqlPlain);
+    final words = mapPlain.map((x) => x["word"].toString()).toList();
+    list.addAll(words);
+
     // remove duplicates (code from SO)  easiest way..
     // and sort'em
     List<String> distinctIds = list.toSet().toList();
     distinctIds.sort();
-    // Sort the list of strings according to the length of each string
-    distinctIds.sort((a, b) => a.length.compareTo(b.length));
+
+    // fine tune the sort
+    distinctIds.sort((a, b) {
+      if (a == word) {
+        return -1;
+      }
+      if (b == word) {
+        return 1;
+      }
+      if (a.length == b.length) {
+        return a.compareTo(b);
+      }
+      return a.length - b.length;
+    });
+
     return distinctIds;
   }
 

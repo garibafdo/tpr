@@ -3,6 +3,8 @@ import 'package:tipitaka_pali/business_logic/models/search_suggestion.dart';
 //import 'package:tipitaka_pali/services/dao/search_suggestion_dao.dart';
 import 'package:tipitaka_pali/services/database/database_helper.dart';
 
+import '../../utils/pali_tools.dart';
+
 abstract class SearchSuggestionRepository {
   Future<List<SearchSuggestion>> getSuggestions(
       String filterWord, bool isFuzzy);
@@ -36,7 +38,7 @@ class SearchSuggestionDatabaseRepository implements SearchSuggestionRepository {
     // change some params for the query based on fuzzy
     if (isFuzzy) {
       // convert to plain so search field matches
-      filterWord = _toPlain(filterWord);
+      filterWord = PaliTools.toPlain(filterWord);
       searchField = "plain";
     }
     String sql =
@@ -67,14 +69,5 @@ class SearchSuggestionDatabaseRepository implements SearchSuggestionRepository {
   Future<List<SearchSuggestion>> getSuggestions(
       String filterWord, bool isFuzzy) async {
     return _getSuggestionsFromDB(filterWord, isFuzzy);
-  }
-
-// function not used but we will keep around
-  String _toPlain(String word) {
-    var plain = word.toLowerCase().trim();
-    variations.forEach((key, value) {
-      plain = plain.replaceAll(value, key);
-    });
-    return plain;
   }
 }

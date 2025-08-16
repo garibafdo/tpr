@@ -1,5 +1,16 @@
 import 'package:tipitaka_pali/services/prefs.dart';
 
+final variations = {
+  'a': RegExp(r'ā'),
+  'u': RegExp(r'ū'),
+  't': RegExp(r'ṭ'),
+  'n': RegExp(r'[ñṇṅ]'),
+  'i': RegExp(r'ī'),
+  'd': RegExp(r'ḍ'),
+  'l': RegExp(r'ḷ'),
+  'm': RegExp(r'[ṁṃ]')
+};
+
 class PaliTools {
   PaliTools._();
   static String velthuisToUni({required String velthiusInput}) {
@@ -48,4 +59,13 @@ class PaliTools {
 
     return uni;
   }
+
+  static String toPlain(String word) {
+    var plain = word.toLowerCase().trim();
+    variations.forEach((key, value) {
+      plain = plain.replaceAll(value, key);
+    });
+    return plain;
+  }
+
 }
