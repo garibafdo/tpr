@@ -532,7 +532,7 @@ class DictionaryController with ChangeNotifier {
       case "Pali English Ultimate (PEU)":
         return FontUtils.getfontName(
             script: Script.roman); // Replace with actual font name
-      case "PEU Algo Used":
+      case "PEA Algo Used":
         return FontUtils.getfontName(
             script: Script.roman); // Replace with actual font name
       case "PTS Pali-English Dictionary":

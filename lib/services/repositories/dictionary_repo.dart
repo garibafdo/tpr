@@ -485,7 +485,8 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
     }
 
     final filterWord = PaliTools.toPlain(word);
-    final sqlPlain = "SELECT word FROM words WHERE plain LIKE '$filterWord%' ORDER BY LENGTH(word), word ASC LIMIT 20;";
+    final sqlPlain =
+        "SELECT word FROM words WHERE plain LIKE '$filterWord%' ORDER BY LENGTH(word), word ASC LIMIT 20;";
     final mapPlain = await db.rawQuery(sqlPlain);
     final words = mapPlain.map((x) => x["word"].toString()).toList();
     list.addAll(words);
@@ -603,7 +604,7 @@ class DictionaryDatabaseRepository implements DictionaryRepository {
           debugPrint("found word in PEU: ${list[0].toString()}");
           var peuDefs = list.map((x) => Definition.fromJson(x)).toList();
           Definition def = peuDefs[0];
-          def.bookName = "PEU Algo Used";
+          def.bookName = "PEA Algo Used";
           def.definition = formatPeuTable(def.word, def.definition);
           debugPrint(def.definition);
           defs.add(def);
