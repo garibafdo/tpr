@@ -15,7 +15,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 2.7.2+95
+version: 2.7.2+96
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -123,7 +123,20 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/database/
+    - assets/database/tipitaka_pali_part.aa
+    - assets/database/tipitaka_pali_part.ab
+    - assets/database/tipitaka_pali_part.ac
+    - assets/database/tipitaka_pali_part.ad
+    - assets/database/tipitaka_pali_part.ae
+    - assets/database/tipitaka_pali_part.af
+    - assets/database/tipitaka_pali_part.ag
+    - assets/database/tipitaka_pali_part.ah
+    - assets/database/tipitaka_pali_part.ai
+    - assets/database/tipitaka_pali_part.aj
+    - assets/database/tipitaka_pali_part.ak
+    - assets/database/tipitaka_pali_part.al
+    - assets/database/tipitaka_pali_part.am
+    - assets/database/tipitaka_pali_part.an
     - assets/web/
     - assets/icon/icon.png
     - assets/icon/tpr_dictionary.png
