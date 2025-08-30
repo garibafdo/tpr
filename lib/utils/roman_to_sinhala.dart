@@ -697,7 +697,7 @@ String _applyDevaPunctuation(String s) {
 
   // Replace sentence periods with danda but DO NOT touch decimals (e.g., 3.14).
   // (?<!\d)\.(?!\d)  = a dot not preceded or followed by a digit
-  s = s.replaceAllMapped(RegExp(r'(?<!\d)\.(?!\d)'), (_) => '।');
+  s = s.replaceAllMapped(RegExp(r'([^०-९>\s*])(\.)'), (m) => '${m.group(1)}।');
 
   // If someone typed '..' as section stop, turn into '॥'
   s = s.replaceAll('..', '॥');
