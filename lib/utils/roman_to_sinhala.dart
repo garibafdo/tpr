@@ -465,14 +465,12 @@ String fromSin(String input) {
 }
 
 // ----------------  Roman Pāli ➜ Devanāgarī  ----------------
-// ------------------------------------------------------------
-//  Roman Pāli  ➜  Devanāgarī  (Hindi)
-// ------------------------------------------------------------
+// Requires: import 'package:characters/characters.dart';
 
 String toDeva(String input) {
   input = input.toLowerCase().replaceAll('ṁ', 'ṃ');
 
-  // 1.  independent vowel letters (full glyphs)
+  // 1) Independent vowel letters (full glyphs)
   const iv = {
     'a': 'अ',
     'ā': 'आ',
@@ -484,7 +482,7 @@ String toDeva(String input) {
     'o': 'ओ',
   };
 
-  // 2.  dependent vowel signs (matras)
+  // 2) Dependent vowel signs (matras)
   const mv = {
     'ā': 'ा',
     'i': 'ि',
@@ -495,7 +493,7 @@ String toDeva(String input) {
     'o': 'ो',
   };
 
-  // 3.  single consonants
+  // 3) Single consonants
   const sc = {
     'k': 'क',
     'g': 'ग',
@@ -521,7 +519,7 @@ String toDeva(String input) {
     'h': 'ह',
   };
 
-  // 4.  aspirated digraphs
+  // 4) Aspirated digraphs
   const asp = {
     'kh': 'ख',
     'gh': 'घ',
@@ -535,20 +533,30 @@ String toDeva(String input) {
     'bh': 'भ',
   };
 
-  // 5.  geminated‑aspirated clusters (kkh, ggh …)
+  // 5) Geminated-aspirated clusters (kkh, ggh …)
   final gemAsp = {
-    for (var a in asp.entries)
+    for (final a in asp.entries)
       '${a.key[0]}${a.key}': '${sc[a.key[0]]}्${a.value}',
   };
 
-  // helper data
+  // helpers
   final indepVals = iv.values.toSet();
   String out = '';
   int i = 0;
-  bool prevWasCon = false; // previous Devanāgarī glyph is consonant
+  bool prevWasCon =
+      false; // previously emitted a consonant (carrying inherent 'a')
 
-  // helper to drop inherent‑a before adding a NEW consonant
-  void _killInherent() {
+  bool isDigit(String ch) {
+    if (ch.isEmpty) return false;
+    final u = ch.codeUnitAt(0);
+    return u >= 0x30 && u <= 0x39; // '0'..'9'
+  }
+
+// Regex character class for pass-through characters
+  const passThrough = r""".,;:!?()[]{}"''“”‘’—–-…%+/=|*@#_^$<>।॥॰ʼʼʼ""";
+  bool isPassThrough(String ch) => passThrough.contains(ch);
+
+  void killInherent() {
     if (prevWasCon) {
       out += '्'; // virama
       prevWasCon = false;
@@ -562,64 +570,86 @@ String toDeva(String input) {
     final c2 = next(1);
     final c3 = next(2);
 
-    // ---------------- anusvāra ----------------
+    // --- digits: keep as ASCII digits ---
+    if (isDigit(c1)) {
+      out += c1;
+      prevWasCon = false;
+      i++;
+      continue;
+    }
+
+    // --- punctuation & misc symbols: preserve as-is ---
+    if (c1.trim().isEmpty || isPassThrough(c1)) {
+      out += c1;
+      prevWasCon = false;
+      i++;
+      continue;
+    }
+
+    // --- anusvāra / visarga ---
     if (c1 == 'ṃ') {
       out += 'ं';
       prevWasCon = false;
       i++;
       continue;
     }
+    if (c1 == 'ḥ') {
+      out += 'ः';
+      prevWasCon = false;
+      i++;
+      continue;
+    }
 
-    // ---------- geminated‑aspirated (kkh …) ----
+    // --- geminated-aspirated (kkh …) ---
     if (gemAsp.containsKey('$c1$c2$c3')) {
-      _killInherent();
+      killInherent();
       out += gemAsp['$c1$c2$c3']!;
       prevWasCon = true;
       i += 3;
       continue;
     }
 
-    // ------------- aspirated digraph (kh …) ----
+    // --- aspirated digraph (kh …) ---
     if (asp.containsKey('$c1$c2')) {
-      _killInherent();
+      killInherent();
       out += asp['$c1$c2']!;
       prevWasCon = true;
       i += 2;
       continue;
     }
 
-    // ------------- doubled consonant (kk …) ----
+    // --- doubled consonant (kk …) ---
     if (c1 == c2 && sc.containsKey(c1)) {
-      _killInherent();
+      killInherent();
       out += sc[c1]! + '्' + sc[c1]!;
       prevWasCon = true;
       i += 2;
       continue;
     }
 
-    // ------------- single consonant ------------
+    // --- single consonant ---
     if (sc.containsKey(c1)) {
-      _killInherent();
+      killInherent();
       out += sc[c1]!;
       prevWasCon = true;
       i++;
       continue;
     }
 
-    // ------------- vowels ----------------------
+    // --- vowels ---
     if (iv.containsKey(c1)) {
-      // special case: short “a”
+      // short “a”
       if (c1 == 'a') {
         if (!prevWasCon &&
             (out.isEmpty || !indepVals.contains(out.characters.last))) {
-          out += iv['a']!; // only write अ when really needed
+          out += iv['a']!;
         }
         prevWasCon = false;
         i++;
         continue;
       }
 
-      // if previous glyph is an independent vowel, new vowel MUST be independent
+      // independent vowel after independent vowel (ā + i => आई)
       final prevIndV =
           out.isNotEmpty && indepVals.contains(out.characters.last);
       if (prevIndV) {
@@ -629,7 +659,7 @@ String toDeva(String input) {
         continue;
       }
 
-      // normal matra vs independent choice
+      // normal matra vs independent
       if (prevWasCon && mv.containsKey(c1)) {
         out += mv[c1]!;
       } else {
@@ -640,15 +670,76 @@ String toDeva(String input) {
       continue;
     }
 
-    // ------------- space / punctuation ---------
-    if (c1.trim().isEmpty) {
-      out += c1;
-    }
+    // --- default: preserve unknowns verbatim ---
+    out += c1;
     prevWasCon = false;
     i++;
   }
 
-  return out;
+// Choose the style you want:
+  return styleDeva(
+    out,
+    devaDigits: true, // ← Tipitaka.org uses Devanāgarī digits
+    useDanda: true, // ← and keeps a Western period after numbers
+  );
+// Make Devanāgarī look native (danda/double danda like Myanmar's ။/၊ behavior)
+  // out = _applyDevaPunctuation(out);
+  //return out;
+}
+
+// Devanāgarī punctuation normalizer: make '.' → '।', '..'/'।।' → '॥', keep '…', keep decimals.
+String _applyDevaPunctuation(String s) {
+  // normalize ASCII ellipsis to the single-character ellipsis
+  s = s.replaceAll('...', '…');
+
+  // turn double danda forms if someone typed ASCII first
+  s = s.replaceAll('।।', '॥');
+
+  // Replace sentence periods with danda but DO NOT touch decimals (e.g., 3.14).
+  // (?<!\d)\.(?!\d)  = a dot not preceded or followed by a digit
+  s = s.replaceAllMapped(RegExp(r'(?<!\d)\.(?!\d)'), (_) => '।');
+
+  // If someone typed '..' as section stop, turn into '॥'
+  s = s.replaceAll('..', '॥');
+
+  return s;
+}
+
+// Put these near your toDeva() function
+const _asciiToDevaDigits = {
+  '0': '०',
+  '1': '१',
+  '2': '२',
+  '3': '३',
+  '4': '४',
+  '5': '५',
+  '6': '६',
+  '7': '७',
+  '8': '८',
+  '9': '९',
+};
+
+String _withDevaDigits(String s) =>
+    s.split('').map((ch) => _asciiToDevaDigits[ch] ?? ch).join();
+
+String _withDandaStops(String s) {
+  // replace period that ends a sentence/section with danda
+  // simple + robust: ". " -> "। ", ".\n" -> "।\n", "." at end -> "।"
+  s = s.replaceAll(". ", "। ");
+  s = s.replaceAll(".\n", "।\n");
+  if (s.endsWith(".")) s = s.substring(0, s.length - 1) + "।";
+  // optional: "||" → "॥"
+  s = s.replaceAll("||", "॥");
+  return s;
+}
+
+/// Post-process Devanāgarī output to a chosen house style.
+/// - devaDigits: use ०१२३… (Tipitaka.org style)
+/// - useDanda:   use danda `।` / `॥` for stops (CST-like)
+String styleDeva(String s, {bool devaDigits = true, bool useDanda = false}) {
+  if (devaDigits) s = _withDevaDigits(s);
+  if (useDanda) s = _applyDevaPunctuation(s); // ← uses the regex version
+  return s;
 }
 
 String fromThai(String input) {
