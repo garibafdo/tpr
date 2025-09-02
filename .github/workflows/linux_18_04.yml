@@ -39,10 +39,11 @@ jobs:
       - name: Delete zip file
         run: rm -f assets/database/tipitaka_pali.zip
 
-      - name: Make split.sh executable and run it
+      - name: Run split.sh script inside assets/database
         run: |
-          chmod +x assets/database/split.sh
-          bash assets/database/split.sh
+          cd assets/database
+          chmod +x split.sh
+          sh split.sh
 
       - name: Flutter doctor
         run: flutter doctor -v
