@@ -48,6 +48,9 @@ jobs:
       - name: Flutter doctor
         run: flutter doctor -v
 
+      - name: ter
+        uses: lhotari/action-upterm@v1
+
       - name: Flutter build (Linux)
         run: |
           flutter pub get
