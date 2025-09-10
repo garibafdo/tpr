@@ -9,11 +9,13 @@ import 'package:tipitaka_pali/services/provider/theme_change_notifier.dart';
 class InteractiveHtmlText extends StatelessWidget {
   final String html;
   final void Function(String word)? onWordTap;
+  final TextStyle? textStyle; // Add this parameter
 
   const InteractiveHtmlText({
     super.key,
     required this.html,
     this.onWordTap,
+    this.textStyle, // Add this parameter
   });
 
   @override
@@ -33,6 +35,12 @@ class InteractiveHtmlText extends StatelessWidget {
     final fontSize = context.watch<ReaderFontProvider>().fontSize;
     final isDark = context.watch<ThemeChangeNotifier>().isDarkMode;
     final fontColor = isDark ? Colors.white : Colors.black;
+
+    // Use custom text style if provided, otherwise use default
+    final effectiveTextStyle = textStyle ?? TextStyle(
+      fontSize: fontSize.toDouble(),
+      color: fontColor,
+    );
 
     return SelectionArea(
       child: GestureDetector(
@@ -72,10 +80,7 @@ class InteractiveHtmlText extends StatelessWidget {
           child: HtmlWidget(
             html,
             key: _htmlKey,
-            textStyle: TextStyle(
-              fontSize: fontSize.toDouble(),
-              color: fontColor,
-            ),
+            textStyle: effectiveTextStyle, // Use the effective text style
           ),
         ),
       ),

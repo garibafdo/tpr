@@ -11,7 +11,8 @@ class FontUtils {
       case Script.sinhala:
         return 'NotoSansSinhala';
       case Script.devanagari:
-        return 'NotoSansDevanagari';
+        //~ return 'NotoSansDevanagari';
+        return 'TiroDevanagariHindi';
       case Script.laos:
         return 'Lao Pali Regular';
       case Script.taitham:

@@ -51,12 +51,9 @@ class _TocDialogState extends State<TocDialog> {
             ),
             Align(
                 alignment: Alignment.centerRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context, null),
-                  ),
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context, null),
                 )),
             Align(
               alignment: Alignment.centerLeft,
@@ -111,21 +108,17 @@ class _TocDialogState extends State<TocDialog> {
                           key: ValueKey(index),
                           controller: autoScrollController,
                           index: index,
-                          child: Card(
-                            margin: const EdgeInsets.all(1),
-                            elevation: .8,
-                            child: ListTile(
-                              minVerticalPadding: 1,
-                              onTap: () => Navigator.pop(context, toc),
-                              leading: currentIndex == index
-                                  ? const Icon(Icons.check)
-                                  : const SizedBox.shrink(),
-                              title: getTocListItem(toc).build(
-                                  context, tocDialogViewController.filterText),
-                              selected: currentIndex == index,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 1, horizontal: 5),
-                            ),
+                          child: ListTile(
+                            minVerticalPadding: 0,
+                            onTap: () => Navigator.pop(context, toc),
+                            leading: currentIndex == index
+                                ? const Icon(Icons.check)
+                                : const SizedBox.shrink(),
+                            title: getTocListItem(toc).build(
+                                context, tocDialogViewController.filterText),
+                            selected: currentIndex == index,
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 0, horizontal: 8),
                           ),
                         );
                       });

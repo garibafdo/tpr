@@ -25,11 +25,17 @@ class RecentPage extends StatelessWidget {
       child: Scaffold(
         appBar: const RecentAppBar(),
         // Rydmike proposal: Consider converting the Drawer on Home screen
-        //    to a Widget and add it also to other top level screens.
+        //     to a Widget and add it also to other top level screens.
         // drawer: Mobile.isPhone(context) ? AppDrawer(context) : null,
         body: Consumer<RecentPageViewModel>(builder: (context, vm, child) {
           final recents = vm.recents;
           Script script = context.read<ScriptLanguageProvider>().currentScript;
+
+          // Define font size based on the script
+          final double titleFontSize =
+              script == Script.devanagari ? 18.0 : Prefs.uiFontSize - 1;
+          final double subtitleFontSize =
+              script == Script.devanagari ? 16.0 : Prefs.uiFontSize - 3;
 
           return recents.isEmpty
               ? Center(child: Text(AppLocalizations.of(context)!.recent))
@@ -39,27 +45,21 @@ class RecentPage extends StatelessWidget {
                     final recent = recents[index];
                     return ListTile(
                       dense: true,
-                      contentPadding: const EdgeInsets.all(0),
+                      contentPadding:
+                          const EdgeInsets.only(left: 8.0, right: 8.0),
                       visualDensity:
                           const VisualDensity(horizontal: 0, vertical: -4),
-                      title: Padding(
-                          padding: const EdgeInsets.only(left: 5),
-                          child:
-                              Text(localScript(context, "${recent.bookName}"),
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: Prefs.uiFontSize - 1,
-                                    fontFamily:
-                                        FontUtils.getfontName(script: script),
-                                  ))),
-                      subtitle: Padding(
-                          padding: const EdgeInsets.only(left: 5),
-                          child: Text(
-                              "${AppLocalizations.of(context)!.page}: ${localScript(context, recent.pageNumber.toString())}",
-                              style: TextStyle(
-                                  fontSize: Prefs.uiFontSize - 3,
-                                  fontFamily:
-                                      FontUtils.getfontName(script: script)))),
+                      title: Text(localScript(context, "${recent.bookName}"),
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: titleFontSize, // Use the new font size
+                            fontFamily: FontUtils.getfontName(script: script),
+                          )),
+                      subtitle: Text(
+                          "${AppLocalizations.of(context)!.page}: ${localScript(context, recent.pageNumber.toString())}",
+                          style: TextStyle(
+                              fontSize: subtitleFontSize, // Use the new font size
+                              fontFamily: FontUtils.getfontName(script: script))),
                       onTap: () => vm.openBook(recent, context),
                       trailing: IconButton(
                         onPressed: () => vm.delete(recent),

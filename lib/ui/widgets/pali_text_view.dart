@@ -26,8 +26,8 @@ class PaliTextView extends StatelessWidget {
               script: script,
             ),
       style: style == null
-          ? TextStyle(fontFamily: fontName)
-          : style?.copyWith(fontFamily: fontName),
+          ? TextStyle(fontFamily: fontName, height: 1.2)
+          : style?.copyWith(fontFamily: fontName, height: 1.2),
     );
   }
 }

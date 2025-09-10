@@ -8,6 +8,7 @@ import '../../../../business_logic/models/search_result.dart';
 import '../../../../services/prefs.dart';
 import '../../../../services/provider/script_language_provider.dart';
 import '../../../../utils/pali_script.dart';
+import '../../../../utils/pali_script_converter.dart'; // <--- ADD THIS LINE
 
 class SearchResultListTile extends StatelessWidget {
   final SearchResult result;
@@ -19,7 +20,10 @@ class SearchResultListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     // print('text: ${result.description}');
     final bool isDarkMode = context.read<ThemeChangeNotifier>().isDarkMode;
-    final style = TextStyle(fontSize: Prefs.uiFontSize);
+    final script = context.read<ScriptLanguageProvider>().currentScript;
+    final double fontSize = script == Script.devanagari ? Prefs.uiFontSize + 2 : Prefs.uiFontSize;
+
+    final style = TextStyle(fontSize: fontSize);
     final styles = {
       highlightTagName: StyledTextTag(
           style: TextStyle(
@@ -31,10 +35,10 @@ class SearchResultListTile extends StatelessWidget {
     };
 
     final bookName = PaliScript.getScriptOf(
-        script: context.read<ScriptLanguageProvider>().currentScript,
+        script: script,
         romanText: result.book.name);
     final pageNumber = PaliScript.getScriptOf(
-        script: context.read<ScriptLanguageProvider>().currentScript,
+        script: script,
         romanText: result.pageNumber.toString());
 
     final bookNameAndPageNumber = bookName;
@@ -43,13 +47,13 @@ class SearchResultListTile extends StatelessWidget {
         : '(p. $pageNumber)';
 
     final styelForBookName = TextStyle(
-        fontSize: Prefs.uiFontSize,
+        fontSize: fontSize,
         fontWeight: FontWeight.bold,
         color: Theme.of(context).primaryColor);
 
     final styleForSuttaName = TextStyle(
       fontWeight: FontWeight.bold,
-      fontSize: Prefs.uiFontSize,
+      fontSize: fontSize,
       color: Theme.of(context).colorScheme.primary,
     );
     return Padding(
@@ -78,8 +82,7 @@ class SearchResultListTile extends StatelessWidget {
                 // description text
                 StyledText(
                   text: PaliScript.getScriptOf(
-                      script:
-                          context.read<ScriptLanguageProvider>().currentScript,
+                      script: script,
                       romanText: result.description,
                       // <highlight> are used for highlight
                       // text is somehow html

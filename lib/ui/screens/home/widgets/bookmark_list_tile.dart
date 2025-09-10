@@ -19,6 +19,11 @@ class BookmarkListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final script = context.watch<ScriptLanguageProvider>().currentScript;
+    // Define font size based on the script
+    final double titleFontSize = script == Script.devanagari ? 18.0 : 16.0;
+    final double subtitleFontSize = script == Script.devanagari ? 16.0 : 14.0;
+
     return Slidable(
         startActionPane: ActionPane(
           motion: const DrawerMotion(),
@@ -36,34 +41,39 @@ class BookmarkListTile extends StatelessWidget {
         ),
         child: Builder(
             builder: (context) => ListTile(
-                  onLongPress: () {
-                    openSlidable(context);
-                  },
-                  onTap: () {
-                    if (onTap != null) onTap!(bookmark);
-                  },
-                  title: Text(bookmark.note),
-                  subtitle: Text(PaliScript.getScriptOf(
-                      script:
-                          context.read<ScriptLanguageProvider>().currentScript,
-                      romanText: bookmark.name)),
-                  trailing: SizedBox(
-                    width: 100,
-                    child: Row(
-                      children: [
-                        Text('${AppLocalizations.of(context)!.page} -'),
-                        Expanded(
-                            child: Text(
-                                PaliScript.getScriptOf(
-                                    script: context
-                                        .read<ScriptLanguageProvider>()
-                                        .currentScript,
-                                    romanText: bookmark.pageNumber.toString()),
-                                textAlign: TextAlign.end)),
-                      ],
-                    ),
+                // Reduce vertical content padding
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                onLongPress: () {
+                  openSlidable(context);
+                },
+                onTap: () {
+                  if (onTap != null) onTap!(bookmark);
+                },
+                title: Text(bookmark.note,
+                    style: TextStyle(
+                        fontSize: titleFontSize)), // Set explicit font size
+                subtitle: Text(PaliScript.getScriptOf(
+                    script: script, romanText: bookmark.name),
+                    style: TextStyle(
+                        fontSize: subtitleFontSize)), // Set explicit font size
+                trailing: SizedBox(
+                  width: 100,
+                  child: Row(
+                    children: [
+                      Text('${AppLocalizations.of(context)!.page} -'),
+                      Expanded(
+                          child: Text(
+                              PaliScript.getScriptOf(
+                                  script: script,
+                                  romanText: bookmark.pageNumber.toString()),
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                  fontSize: subtitleFontSize))), // Set explicit font size
+                    ],
                   ),
-                )));
+                ),
+              )));
   }
 
   void openSlidable(BuildContext context) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../business_logic/models/page_content.dart';
 import '../../../../services/provider/script_language_provider.dart';
@@ -15,12 +16,14 @@ class HorizontalBookView extends StatefulWidget {
       this.onSearchedSelectedText,
       this.onSharedSelectedText,
       this.onClickedWord,
+      this.onMiddleClickedWord,
       this.onSearchedInCurrentBook,
       this.onAiContextRightClick,
       this.onSelectionChanged});
   final ValueChanged<String>? onSearchedSelectedText;
   final ValueChanged<String>? onSharedSelectedText;
   final ValueChanged<String>? onClickedWord;
+  final ValueChanged<String>? onMiddleClickedWord;
   final ValueChanged<String>? onSearchedInCurrentBook;
   final ValueChanged<String>? onAiContextRightClick;
   final ValueChanged<String>? onSelectionChanged;
@@ -140,15 +143,48 @@ class _HorizontalBookViewState extends State<HorizontalBookView> {
                 _selectedContent = value;
                 widget.onSelectionChanged?.call(value?.plainText ?? '');
               },
-              child: PaliPageWidget(
-                  pageNumber: pageContent.pageNumber!,
-                  htmlContent: htmlContent,
-                  script: script,
-                  highlightedWord: readerViewController.textToHighlight,
-                  searchText: searchText,
-                  pageToHighlight: readerViewController.pageToHighlight,
-                  onClick: widget.onClickedWord,
-                  book: readerViewController.book),
+              child: Listener(
+                onPointerDown: (event) {
+                  if (event.buttons == 4) {
+                    // Handle middle click for dictionary
+                    final box = context.findRenderObject() as RenderBox;
+                    final result = BoxHitTestResult();
+                    final offset = box.globalToLocal(event.position);
+                    
+                    if (box.hitTest(result, position: offset)) {
+                      for (final entry in result.path) {
+                        if (entry is! BoxHitTestEntry || entry.target is! RenderParagraph) {
+                          continue;
+                        }
+                        
+                        final target = entry.target as RenderParagraph;
+                        final p = target.getPositionForOffset(entry.localPosition);
+                        final text = target.text.toPlainText();
+                        
+                        if (text.isNotEmpty && p.offset < text.length) {
+                          final int offset = p.offset;
+                          final charUnderTap = text[offset];
+                          final leftChars = _getLeftCharacters(text, offset);
+                          final rightChars = _getRightCharacters(text, offset);
+                          final word = leftChars + charUnderTap + rightChars;
+                          
+                          widget.onMiddleClickedWord?.call(word);
+                          break;
+                        }
+                      }
+                    }
+                  }
+                },
+                child: PaliPageWidget(
+                    pageNumber: pageContent.pageNumber!,
+                    htmlContent: htmlContent,
+                    script: script,
+                    highlightedWord: readerViewController.textToHighlight,
+                    searchText: searchText,
+                    pageToHighlight: readerViewController.pageToHighlight,
+                    onClick: widget.onClickedWord,
+                    book: readerViewController.book),
+              ),
             ),
           ),
         );
@@ -160,17 +196,27 @@ class _HorizontalBookViewState extends State<HorizontalBookView> {
     );
   }
 
-  // String? _needToHighlight(int index) {
-  //   if (readerViewController.textToHighlight == null) return null;
-  //   if (readerViewController.initialPage == null) return null;
+  String _getLeftCharacters(String text, int offset) {
+    final nonPali = RegExp(r'[.,:;\"{}\[\]<>\/\(\) ]+', caseSensitive: false);
+    StringBuffer chars = StringBuffer();
+    for (int i = offset - 1; i >= 0; i--) {
+      if (nonPali.hasMatch(text[i]) && text[i] != '"' && text[i] != "'") {
+        break;
+      }
+      chars.write(text[i]);
+    }
+    return chars.toString().split('').reversed.join();
+  }
 
-  //   if (index ==
-  //       readerViewController.initialPage! -
-  //           readerViewController.book.firstPage) {
-  //     return readerViewController.textToHighlight;
-  //   }
-  //   return null;
-  // }
+  String _getRightCharacters(String text, int offset) {
+    final nonPali = RegExp(r'[.,:;\"{}\[\]<>\/\(\) ]+', caseSensitive: false);
+    StringBuffer chars = StringBuffer();
+    for (int i = offset + 1; i < text.length; i++) {
+      if (nonPali.hasMatch(text[i]) && text[i] != '"' && text[i] != "'") break;
+      chars.write(text[i]);
+    }
+    return chars.toString();
+  }
 
   void _listenPageChange() {
     int pageIndex = readerViewController.currentPage.value -

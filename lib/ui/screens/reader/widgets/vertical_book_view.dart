@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:streaming_shared_preferences/streaming_shared_preferences.dart';
 import 'package:tipitaka_pali/providers/font_provider.dart';
@@ -23,12 +24,14 @@ class VerticalBookView extends StatefulWidget {
       this.onSearchedSelectedText,
       this.onSharedSelectedText,
       this.onClickedWord,
+      this.onMiddleClickedWord,
       this.onSearchedInCurrentBook,
       this.onAiContextRightClick,
       this.onSelectionChanged});
   final ValueChanged<String>? onSearchedSelectedText;
   final ValueChanged<String>? onSharedSelectedText;
   final ValueChanged<String>? onClickedWord;
+  final ValueChanged<String>? onMiddleClickedWord;
   final ValueChanged<String>? onSearchedInCurrentBook;
   final ValueChanged<String>? onAiContextRightClick;
   final ValueChanged<String>? onSelectionChanged;
@@ -210,57 +213,90 @@ class _VerticalBookViewState extends State<VerticalBookView>
                         _selectedContent = value;
                         widget.onSelectionChanged?.call(value?.plainText ?? '');
                       },
-                      child: ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(context)
-                              .copyWith(scrollbars: false),
-                          child: ScrollablePositionedList.builder(
-                            initialScrollIndex: pageIndex,
-                            itemScrollController: itemScrollController,
-                            itemPositionsListener: itemPositionsListener,
-                            scrollOffsetController: scrollOffsetController,
-                            scrollOffsetListener: scrollOffsetListener,
-                            addAutomaticKeepAlives: false,
-                            itemCount: readerViewController.pages.length,
-                            itemBuilder: (_, index) {
-                              final PageContent pageContent =
-                                  readerViewController.pages[index];
-                              final script = context
-                                  .read<ScriptLanguageProvider>()
-                                  .currentScript;
-                              // transciption
+                      child: Listener(
+                        onPointerDown: (event) {
+                          if (event.buttons == 4) {
+                            // Handle middle click for dictionary
+                            final box = context.findRenderObject() as RenderBox;
+                            final result = BoxHitTestResult();
+                            final offset = box.globalToLocal(event.position);
+                            
+                            if (box.hitTest(result, position: offset)) {
+                              for (final entry in result.path) {
+                                if (entry is! BoxHitTestEntry || entry.target is! RenderParagraph) {
+                                  continue;
+                                }
+                                
+                                final target = entry.target as RenderParagraph;
+                                final p = target.getPositionForOffset(entry.localPosition);
+                                final text = target.text.toPlainText();
+                                
+                                if (text.isNotEmpty && p.offset < text.length) {
+                                  final int offset = p.offset;
+                                  final charUnderTap = text[offset];
+                                  final leftChars = _getLeftCharacters(text, offset);
+                                  final rightChars = _getRightCharacters(text, offset);
+                                  final word = leftChars + charUnderTap + rightChars;
+                                  
+                                  widget.onMiddleClickedWord?.call(word);
+                                  break;
+                                }
+                              }
+                            }
+                          }
+                        },
+                        child: ScrollConfiguration(
+                            behavior: ScrollConfiguration.of(context)
+                                .copyWith(scrollbars: false),
+                            child: ScrollablePositionedList.builder(
+                              initialScrollIndex: pageIndex,
+                              itemScrollController: itemScrollController,
+                              itemPositionsListener: itemPositionsListener,
+                              scrollOffsetController: scrollOffsetController,
+                              scrollOffsetListener: scrollOffsetListener,
+                              addAutomaticKeepAlives: false,
+                              itemCount: readerViewController.pages.length,
+                              itemBuilder: (_, index) {
+                                final PageContent pageContent =
+                                    readerViewController.pages[index];
+                                final script = context
+                                    .read<ScriptLanguageProvider>()
+                                    .currentScript;
+                                // transciption
 
-                              final id =
-                                  '${readerViewController.book.name}-${readerViewController.book.id}-$index-$script';
+                                final id =
+                                    '${readerViewController.book.name}-${readerViewController.book.id}-$index-$script';
 
-                              final stopwatch = Stopwatch()..start();
-                              String htmlContent = PaliScript.getCachedScriptOf(
-                                script: script,
-                                romanText: pageContent.content,
-                                cacheId: id,
-                                isHtmlText: true,
-                              );
-
-                              return Padding(
-                                padding: index ==
-                                        readerViewController.pages.length - 1
-                                    ? const EdgeInsets.only(bottom: 100.0)
-                                    : EdgeInsets.zero,
-                                child: PaliPageWidget(
-                                  pageNumber: pageContent.pageNumber!,
-                                  htmlContent: htmlContent,
+                                final stopwatch = Stopwatch()..start();
+                                String htmlContent = PaliScript.getCachedScriptOf(
                                   script: script,
-                                  highlightedWord:
-                                      readerViewController.textToHighlight,
-                                  searchText: searchText,
-                                  pageToHighlight:
-                                      readerViewController.pageToHighlight,
-                                  onClick: widget.onClickedWord,
-                                  book: readerViewController.book,
-                                ),
-                              );
-                              // bookmarks: readerViewController.bookmarks,);
-                            },
-                          )),
+                                  romanText: pageContent.content,
+                                  cacheId: id,
+                                  isHtmlText: true,
+                                );
+
+                                return Padding(
+                                  padding: index ==
+                                          readerViewController.pages.length - 1
+                                      ? const EdgeInsets.only(bottom: 100.0)
+                                      : EdgeInsets.zero,
+                                  child: PaliPageWidget(
+                                    pageNumber: pageContent.pageNumber!,
+                                    htmlContent: htmlContent,
+                                    script: script,
+                                    highlightedWord:
+                                        readerViewController.textToHighlight,
+                                    searchText: searchText,
+                                    pageToHighlight:
+                                        readerViewController.pageToHighlight,
+                                    onClick: widget.onClickedWord,
+                                    book: readerViewController.book,
+                                  ),
+                                );
+                                // bookmarks: readerViewController.bookmarks,);
+                              },
+                            )),
+                      ),
                     ),
                   ),
                   PreferenceBuilder<bool>(
@@ -305,17 +341,27 @@ class _VerticalBookViewState extends State<VerticalBookView>
     });
   }
 
-  // String? _needToHighlight(int index) {
-  //   if (readerViewController.textToHighlight == null) return null;
-  //   if (readerViewController.initialPage == null) return null;
+  String _getLeftCharacters(String text, int offset) {
+    final nonPali = RegExp(r'[.,:;\"{}\[\]<>\/\(\) ]+', caseSensitive: false);
+    StringBuffer chars = StringBuffer();
+    for (int i = offset - 1; i >= 0; i--) {
+      if (nonPali.hasMatch(text[i]) && text[i] != '"' && text[i] != "'") {
+        break;
+      }
+      chars.write(text[i]);
+    }
+    return chars.toString().split('').reversed.join();
+  }
 
-  //   if (index ==
-  //       readerViewController.initialPage! -
-  //           readerViewController.book.firstPage) {
-  //     return readerViewController.textToHighlight;
-  //   }
-  //   return null;
-  // }
+  String _getRightCharacters(String text, int offset) {
+    final nonPali = RegExp(r'[.,:;\"{}\[\]<>\/\(\) ]+', caseSensitive: false);
+    StringBuffer chars = StringBuffer();
+    for (int i = offset + 1; i < text.length; i++) {
+      if (nonPali.hasMatch(text[i]) && text[i] != '"' && text[i] != "'") break;
+      chars.write(text[i]);
+    }
+    return chars.toString();
+  }
 
   void _listenItemPosition() {
     // if only one page exist in view, there in no need to update current page

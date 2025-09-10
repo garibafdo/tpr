@@ -52,35 +52,6 @@ class PaliPageWidget extends StatefulWidget {
 
 final nonPali = RegExp(r'[.,:;\"{}\[\]<>\/\(\) ]+', caseSensitive: false);
 
-/*
-class PaliWidgetFactory extends WidgetFactory {
-  Function(String)? showDialogCallback;
-  @override
-  InlineSpan? buildTextSpan({
-    List<InlineSpan>? children,
-    GestureRecognizer? recognizer,
-    TextStyle? style,
-    String? text,
-  }) {
-    if (text?.isEmpty == true) {
-      if (children == null) {
-        return null;
-      }
-      if (children.length == 1) {
-        return children.first;
-      }
-    }
-
-    return TextSpan(
-      children: children,
-      mouseCursor: recognizer != null ? SystemMouseCursors.click : null,
-      recognizer: recognizer,
-      style: style,
-      text: text,
-    );
-  }
-}
-*/
 class _PaliPageWidgetState extends State<PaliPageWidget> {
   final _myFactory = WidgetFactory();
   String? highlightedWord;
@@ -136,33 +107,22 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
   @override
   Widget build(BuildContext context) {
     int fontSize = context.watch<ReaderFontProvider>().fontSize;
-// Get the font name based on the current script
-//  final fontName = context.read<ScriptLanguageProvider>().getScriptFont();
 
-    String html = _formatContent(widget.htmlContent, widget.script, context);
+    // Get translated content for this specific page using the new system
+    final translatedContent = context.select<ReaderViewController, String?>(
+        (controller) => controller.getTranslatedContent(widget.pageNumber));
 
     final fontName = FontUtils.getfontName(
         script: context.read<ScriptLanguageProvider>().currentScript);
 
+    // Use the translated HTML if available for this specific page, otherwise use the original content
+    String html = translatedContent ?? _formatContent(widget.htmlContent, widget.script, context);
+
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 0.0), // <-- Reduced vertical padding here
       child: Container(
         color: Colors.transparent,
         child: GestureDetector(
-          /*onSecondaryTapUp: (details) {
-            final SelectionRegistrar? registrar =
-                SelectionContainer.maybeOf(context);
-            if (registrar is! MultiSelectableSelectionContainerDelegate) {
-              // registrar should be this class if a `SelectionArea` is in the widget tree
-              return;
-            }
-            registrar.dispatchSelectionEvent(const ClearSelectionEvent());
-            registrar.dispatchSelectionEvent(SelectWordSelectionEvent(
-                globalPosition: details.globalPosition));
-            final tapped = registrar.getSelectedContent();
-            // selecting word this way won't trigger the `onSelectionChanged` callback
-            debugPrint('word under right-click: ${tapped?.plainText}');
-          },*/
           onTapUp: (details) {
             final box =
                 _textKey.currentContext?.findRenderObject()! as RenderBox;
@@ -230,23 +190,14 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
             key: _textKey,
             html,
             factoryBuilder: () => _myFactory,
+            // Reduced height here to decrease line spacing within paragraphs
             textStyle: TextStyle(
                 fontSize: fontSize.toDouble(),
                 inherit: true,
-                fontFamily: fontName),
+                fontFamily: fontName,
+                height: 1.25), // <--- Reduced height for tighter line spacing
             customStylesBuilder: (element) {
-              // if (element.className == 'title' ||
-              //     element.className == 'book' ||
-              //     element.className == 'chapter' ||
-              //     element.className == 'subhead' ||
-              //     element.className == 'nikaya') {
-              //   return {
-              //     'text-align': 'center',
-              //     // 'text-decoration': 'none',
-              //   };
-              // }
               if (element.localName == 'a') {
-                // print('found a tag: ${element.outerHtml}');
                 final isHighlight =
                     element.parent!.className.contains('search-highlight') ==
                         true;
@@ -268,21 +219,14 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
               }
 
               if (element.className == 'highlighted') {
-                String styleColor = (Prefs.darkThemeOn) ? "white" : "black";
                 Color c = Theme.of(context).primaryColorLight;
-
-                // Converting the Flutter Color object to a CSS hex string for the text color
                 String colorHex =
                     '#${c.value.toRadixString(16).padLeft(8, '0').substring(2)}';
-
                 return {
-                  'color': 'inherit', // Uses the default text color
-                  'background-color':
-                      colorHex, // Highlights the text with colorHex
-                  //'font-weight': '500', // Sets the font weight to 500
-                  'text-decoration': 'underline', // Underlines the text
-                  'text-decoration-color':
-                      colorHex, // Sets underline color to match colorHex
+                  'color': 'inherit',
+                  'background-color': colorHex,
+                  'text-decoration': 'underline',
+                  'text-decoration-color': colorHex,
                 };
               }
               // no style
@@ -292,10 +236,11 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
               if (element.localName == 'span' &&
                   element.className == 'linebreak') {
                 return const InlineCustomWidget(
-                    child: SizedBox(
-                  height: 0.0,
-                  child: Text('\n '),
-                ));
+                  child: SizedBox(
+                    height: 0.0, // <--- Reduced height for linebreak spacing
+                    child: Text('\n '),
+                  ),
+                );
               }
 
               if (element.localName == 'a' && element.className == 'bookmark') {
@@ -352,6 +297,7 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
   }
 
   String _formatContent(String content, Script script, BuildContext context) {
+    // REMOVE the translation check from here since we handle it in the build method
     content = _removeHiddenTags(content);
     content = _addLineBreak(content);
 
@@ -375,7 +321,6 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
           romanText: widget.searchText!);
       content = _addHighlight2(content, textToHighlight, context);
     }
-    // content = _makeClickable(content, script);
     content = _changeToInlineStyle(content);
 
     return content;
@@ -476,33 +421,6 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
     final regexPaliWord = _getPaliWordRegexp(script);
     return content.replaceAllMapped(regexPaliWord,
         (match) => '<a href="${match.group(0)}">${match.group(0)}</a>');
-    /*
-    final regexHtmlTag = RegExp(r'<[^>]+>');
-    final regexPaliWord = RegExp(r'([a-zA-ZāīūṅñṭḍṇḷṃĀĪŪṄÑṬḌHṆḶṂ]+)');
-    final matches = regexHtmlTag.allMatches(content);
-
-    var formattedContent = '';
-    for (var i = 0, length = matches.length; i < length - 1; i++) {
-      final curretTag = matches.elementAt(i);
-      final nextTag = matches.elementAt(i + 1);
-      // add current tag to formatted content
-      formattedContent += content.substring(curretTag.start, curretTag.end);
-      if (curretTag.end == nextTag.start) continue; // no text data
-      // extract text data
-      var text = content.substring(curretTag.end, nextTag.start);
-      // add a tag to every word to make clickable
-      text = text.replaceAllMapped(regexPaliWord, (match) {
-        String word = match.group(0)!;
-        return '<a href="$word">$word</a>';
-      });
-      // add text to formatted context
-      formattedContent += text;
-    }
-    // add last tag to formatted content
-    formattedContent += content.substring(matches.last.start);
-
-    return formattedContent;
-    */
   }
 
   String _changeToInlineStyle(String content) {
@@ -547,15 +465,14 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
       r'class="gathalast"': r'style="margin-bottom: 1.3em; margin-left: 5em;"',
       r'class="pageheader"': r'style="font-size: 0.9em; color: deeppink;"',
       r'class="note"': r'style="font-size: 0.8em; color: gray;"',
-      r'class = "highlightedSearch"':
-          r'style="background: #FFE959; color: #000;"',
+      r'class = "highlightedSearch"': r'style="background: #FFE959; color: #000;"',
       // r'class="highlighted"':
-      //     r'style="background: rgb(255, 114, 20); color: white;"',
+      //   r'style="background: rgb(255, 114, 20); color: white;"',
       r'class = "underlined_highlight"': r'style="font-weight: 500; color: ' +
           colorHex +
           '; text-decoration: underline; text-decoration-color: ' +
           colorHex +
-          ';"'
+          ';"',
     };
 
     styleMaps.forEach((key, value) {
@@ -617,7 +534,7 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
     // return pages[index].content;
 
     // if (tocHeader != null) {
-    //   pageContent = addIDforScroll(pageContent, tocHeader!);
+    //  pageContent = addIDforScroll(pageContent, tocHeader!);
     // }
 
     // showing page number based on user settings
@@ -653,7 +570,7 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
             <div id="page_content">
               $pageContent
             </div>
-    ''';
+          ''';
   }
 
   String _getScriptPageNumber(int pageNumber) {
@@ -691,7 +608,7 @@ class _PaliPageWidgetState extends State<PaliPageWidget> {
 
         // adding id to scroll
         // content = content.replaceFirst('<span class = "highlighted">',
-        //     '<span id="$kGotoID" class="highlighted">');
+        //      '<span id="$kGotoID" class="highlighted">');
         return content;
       }
     }

@@ -32,12 +32,15 @@ class TocHeadingOne implements TocListItem {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     Script script = context.read<ScriptLanguageProvider>().currentScript;
     final tocName = PaliScript.getScriptOf(script: script, romanText: toc.name);
+    // Determine font size based on script
+    final double fontSize = Prefs.uiFontSize + 2;
+
     return SubstringHighlight(
       text: tocName,
       term: filterText,
       textStyle: TextStyle(
           color: colorScheme.onSurface,
-          fontSize: Prefs.uiFontSize + 2,
+          fontSize: fontSize,
           fontWeight: FontWeight.bold,
           fontFamily: FontUtils.getfontName(script: script)),
       textStyleHighlight: TextStyle(color: colorScheme.primary),
@@ -62,6 +65,8 @@ class TocHeadingTwo implements TocListItem {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     Script script = context.read<ScriptLanguageProvider>().currentScript;
     final tocName = PaliScript.getScriptOf(script: script, romanText: toc.name);
+    // Determine font size based on script
+    final double fontSize = Prefs.uiFontSize + 2;
     return Padding(
       padding: const EdgeInsets.only(left: 16.0),
       child: SubstringHighlight(
@@ -69,7 +74,7 @@ class TocHeadingTwo implements TocListItem {
         term: filterText,
         textStyle: TextStyle(
             color: colorScheme.onSurface,
-            fontSize: Prefs.uiFontSize + 2,
+            fontSize: fontSize,
             fontFamily: FontUtils.getfontName(script: script)),
         textStyleHighlight: TextStyle(color: colorScheme.primary),
       ),
@@ -95,6 +100,8 @@ class TocHeadingThree implements TocListItem {
 
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
     final tocName = PaliScript.getScriptOf(script: script, romanText: toc.name);
+    // Determine font size based on script
+    final double fontSize = Prefs.uiFontSize + 2;
     return Padding(
       padding: const EdgeInsets.only(left: 32.0),
       child: SubstringHighlight(
@@ -102,7 +109,7 @@ class TocHeadingThree implements TocListItem {
         term: filterText,
         textStyle: TextStyle(
             color: colorScheme.onSurface,
-            fontSize: Prefs.uiFontSize - 1,
+            fontSize: fontSize,
             fontFamily: FontUtils.getfontName(script: script)),
         textStyleHighlight: TextStyle(
             color: colorScheme.primary,
@@ -130,6 +137,8 @@ class TocHeadingFour implements TocListItem {
     Script script = context.read<ScriptLanguageProvider>().currentScript;
 
     final tocName = PaliScript.getScriptOf(script: script, romanText: toc.name);
+    // Determine font size based on script
+    final double fontSize = Prefs.uiFontSize + 2;
     return Padding(
       padding: const EdgeInsets.only(left: 48.0),
       child: SubstringHighlight(
@@ -137,7 +146,7 @@ class TocHeadingFour implements TocListItem {
         term: filterText,
         textStyle: TextStyle(
             color: colorScheme.onSurface,
-            fontSize: Prefs.uiFontSize + 3,
+            fontSize: fontSize,
             fontFamily: FontUtils.getfontName(script: script)),
         textStyleHighlight: TextStyle(color: colorScheme.primary),
       ),
@@ -163,6 +172,8 @@ class TocHeadingFive implements TocListItem {
     Script script = context.read<ScriptLanguageProvider>().currentScript;
 
     final tocName = PaliScript.getScriptOf(script: script, romanText: toc.name);
+    // Determine font size based on script
+    final double fontSize = Prefs.uiFontSize + 2;
     return Padding(
       padding: const EdgeInsets.only(left: 64.0),
       child: SubstringHighlight(
@@ -170,7 +181,7 @@ class TocHeadingFive implements TocListItem {
         term: filterText,
         textStyle: TextStyle(
             color: colorScheme.onSurface,
-            fontSize: Prefs.uiFontSize + 3,
+            fontSize: fontSize,
             fontFamily: FontUtils.getfontName(script: script)),
         textStyleHighlight: TextStyle(color: colorScheme.primary),
       ),

@@ -61,10 +61,10 @@ class _AiSettingsViewState extends State<AiSettingsView> {
         }
       } else {
         const defaultModels = {
-          'google/gemini-flash-1.5-8b-exp': 'Gemini Flash 1.5',
-          'google/gemini-2.5-pro-exp-03-25:free': 'Gemini Pro 2.5',
-          'deepseek/deepseek-chat-v3-0324:free': 'DeepSeek Chat V3',
-          'nvidia/llama-3.1-nemotron-70b-instruct:free': 'Nvidia Llama 3.1',
+          'google/gemini-2.0-flash-exp:free': 'Gemini Flash 2.0',
+          'google/gemma-3-27b-it:free': 'Gemma 3', 
+          'deepseek/deepseek-chat-v3.1:free': 'DeepSeek Chat V3',
+          'meta-llama/llama-3.3-8b-instruct:free': 'Meta Llama 3.3',
           'openai/gpt-4.1': '\$ OpenAI 4.1 ',
           'openai/chatgpt-4o-latest': '\$\$ OpenAi 4o',
           'x-ai/grok-3-beta': '\$\$ Grok 3 Beta',
@@ -85,7 +85,7 @@ class _AiSettingsViewState extends State<AiSettingsView> {
   Future<void> _updateModelsFromGitHub(BuildContext context) async {
     try {
       final response = await http.get(Uri.parse(
-          'https://github.com/bksubhuti/tpr_downloads/raw/master/download_source_files/openrouter_models.json'));
+          'https://github.com/garibafdo/facealign/raw/refs/heads/master/openrouter_models.json'));
 
       if (response.statusCode == 200) {
         final newData = json.decode(response.body);

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ import 'package:tipitaka_pali/ui/screens/reader/mobile_reader_container.dart';
 import 'package:tipitaka_pali/ui/screens/reader/widgets/interactive_html_text.dart';
 import 'package:tipitaka_pali/ui/screens/reader/widgets/search_widget.dart';
 import 'package:http/http.dart' as http;
+import 'package:markdown/markdown.dart' as md;
+
 import 'package:tipitaka_pali/l10n/app_localizations.dart';
 
 import '../../../app.dart';
@@ -78,10 +81,60 @@ class Reader extends StatelessWidget {
   }
 }
 
-class ReaderView extends StatelessWidget implements Searchable {
+class ReaderView extends StatefulWidget {
   final BookViewMode bookViewMode;
-  ReaderView({super.key, required this.bookViewMode});
+  const ReaderView({super.key, required this.bookViewMode});
+
+  @override
+  State<ReaderView> createState() => _ReaderViewState();
+}
+
+class _ReaderViewState extends State<ReaderView> implements Searchable {
   final _sc = SlidableBarController(initialStatus: Prefs.controlBarShow);
+  final FocusNode _translationFocusNode = FocusNode();
+  final FocusNode _readerFocusNode = FocusNode();
+  final ScrollController _translationScrollController = ScrollController();
+  final ScrollController _readerScrollController = ScrollController();
+  String? _lastTranslation;
+  final ValueNotifier<Offset> _offset = ValueNotifier(const Offset(12, 40));
+  final ValueNotifier<Size> _size = ValueNotifier(Size(1500, 400));
+
+  // Global key for the translation bubble
+  final GlobalKey _translationBubbleKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // Request focus on the reader view initially
+    _readerFocusNode.requestFocus();
+
+    final readerViewController = context.read<ReaderViewController>();
+    readerViewController.isTranslating.addListener(_translationStatusListener);
+  }
+
+  @override
+  void dispose() {
+    final readerViewController = context.read<ReaderViewController>();
+    readerViewController.isTranslating.removeListener(_translationStatusListener);
+    _translationFocusNode.dispose();
+    _readerFocusNode.dispose();
+    _translationScrollController.dispose();
+    _readerScrollController.dispose();
+    _offset.dispose();
+    _size.dispose();
+    super.dispose();
+  }
+
+  void _translationStatusListener() {
+    final readerViewController = context.read<ReaderViewController>();
+    if (!readerViewController.isTranslating.value) {
+      // When translation is finished, give focus to the translation popup
+      if (readerViewController.aiTranslationHtml.value != null) {
+        _translationFocusNode.requestFocus();
+      }
+    }
+  }
+
 
   @override
   void onSearchRequested(BuildContext context) {
@@ -93,16 +146,215 @@ class ReaderView extends StatelessWidget implements Searchable {
   @override
   Widget build(BuildContext context) {
     return Shortcuts(
-        shortcuts: <LogicalKeySet, Intent>{
-          LogicalKeySet(
-              Platform.isMacOS
-                  ? LogicalKeyboardKey.meta
-                  : LogicalKeyboardKey.control,
-              LogicalKeyboardKey.keyF): const SearchIntent(),
-        },
-        child: Actions(actions: <Type, Action<Intent>>{
+      shortcuts: <LogicalKeySet, Intent>{
+        LogicalKeySet(
+            Platform.isMacOS
+                ? LogicalKeyboardKey.meta
+                : LogicalKeyboardKey.control,
+            LogicalKeyboardKey.keyF): const SearchIntent(),
+        LogicalKeySet(
+          LogicalKeyboardKey.control,
+          LogicalKeyboardKey.alt,
+          LogicalKeyboardKey.shift,
+          LogicalKeyboardKey.keyA,
+        ): const TranslateDharmamitraIntent(),
+        LogicalKeySet(
+          LogicalKeyboardKey.control,
+          LogicalKeyboardKey.alt,
+          LogicalKeyboardKey.keyA,
+        ): const TranslateDharmamitraSimpleIntent(),
+        LogicalKeySet(
+          LogicalKeyboardKey.control,
+          LogicalKeyboardKey.alt,
+          LogicalKeyboardKey.keyR,
+        ): const TranslateInPlaceIntent(),
+        // Keyboard shortcuts for popup and scrolling
+        LogicalKeySet(LogicalKeyboardKey.escape): const ClosePopupIntent(),
+        LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.escape):
+            const ReopenPopupIntent(),
+        LogicalKeySet(LogicalKeyboardKey.keyK): const ScrollUpIntent(),
+        LogicalKeySet(LogicalKeyboardKey.keyJ): const ScrollDownIntent(),
+        // Vim-like navigation for popup
+        LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.keyH): const MovePopupLeftIntent(),
+        LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.keyJ): const MovePopupDownIntent(),
+        LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.keyK): const MovePopupUpIntent(),
+        LogicalKeySet(LogicalKeyboardKey.shift, LogicalKeyboardKey.keyL): const MovePopupRightIntent(),
+        
+        
+        // ADD THESE NEW SHORTCUTS AFTER THE EXISTING ONES:
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyZ): const UndoInPlaceTranslationIntent(),
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyY): const RedoInPlaceTranslationIntent(),
+        
+// TO THIS:
+LogicalKeySet(
+  LogicalKeyboardKey.control,
+  LogicalKeyboardKey.alt,
+  LogicalKeyboardKey.keyW,
+): const TranslateDharmamitraHindiIntent()
+      
+      },
+      child: Actions(
+        actions: <Type, Action<Intent>>{
           SearchIntent: SearchAction(this, context),
-        }, child: _getReader(context)));
+          TranslateDharmamitraIntent: CallbackAction<TranslateDharmamitraIntent>(
+              onInvoke: (intent) async {
+            final selectedText =
+                context.read<ReaderViewController>().selection ?? '';
+            await _onAiContextRightClick(selectedText, context,
+                useDharmamitraSimple: false);
+            return null;
+          }),
+          TranslateDharmamitraSimpleIntent:
+              CallbackAction<TranslateDharmamitraSimpleIntent>(
+                  onInvoke: (intent) async {
+            final selectedText =
+                context.read<ReaderViewController>().selection ?? '';
+            await _onAiContextRightClick(selectedText, context,
+                useDharmamitraSimple: true);
+            return null;
+          }),
+          
+           // ADD THIS NEW ACTION HANDLER RIGHT AFTER THE ABOVE:
+    TranslateDharmamitraHindiIntent:
+        CallbackAction<TranslateDharmamitraHindiIntent>(
+            onInvoke: (intent) async {
+      final selectedText =
+          context.read<ReaderViewController>().selection ?? '';
+      await _onAiContextRightClickHindi(selectedText, context);
+      return null;
+    }),
+          TranslateInPlaceIntent: CallbackAction<TranslateInPlaceIntent>(
+            onInvoke: (intent) async {
+              final selectedText =
+                  context.read<ReaderViewController>().selection ?? '';
+              await _onInPlaceTranslation(selectedText, context);
+              return null;
+            },
+          ),
+          // In reader.dart, update the ClosePopupIntent and ReopenPopupIntent handlers:
+
+          // Update the ClosePopupIntent handler:
+ClosePopupIntent: CallbackAction<ClosePopupIntent>(
+  onInvoke: (intent) {
+    final rc = context.read<ReaderViewController>();
+    if (rc.aiTranslationHtml.value != null) {
+      _lastTranslation = rc.aiTranslationHtml.value;
+      rc.aiTranslationHtml.value = null;
+      _readerFocusNode.requestFocus();
+    }
+    // Also handle in-place translation revert - use the new method
+    rc.clearInPlaceTranslation();
+    return null;
+  },
+),
+ReopenPopupIntent: CallbackAction<ReopenPopupIntent>(
+  onInvoke: (intent) {
+    final rc = context.read<ReaderViewController>();
+    if (_lastTranslation != null) {
+      rc.aiTranslationHtml.value = _lastTranslation;
+      _translationFocusNode.requestFocus();
+    }
+    // Also handle in-place translation redo - use the new method
+    if (rc.lastTranslatedPage != null && rc.lastTranslatedSection != null) {
+      _onInPlaceTranslation(rc.lastTranslatedSection!, context);
+    }
+    return null;
+  },
+),
+          ScrollDownIntent: CallbackAction<ScrollDownIntent>(
+            onInvoke: (intent) {
+              if (_translationFocusNode.hasFocus) {
+                _translationScrollController.animateTo(
+                  _translationScrollController.offset + 200,
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.easeIn,
+                );
+              } else if (_readerFocusNode.hasFocus) {
+                _readerScrollController.animateTo(
+                  _readerScrollController.offset + 200,
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.easeIn,
+                );
+              }
+              return null;
+            },
+          ),
+          ScrollUpIntent: CallbackAction<ScrollUpIntent>(
+            onInvoke: (intent) {
+              if (_translationFocusNode.hasFocus) {
+                _translationScrollController.animateTo(
+                  _translationScrollController.offset - 200,
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.easeIn,
+                );
+              } else if (_readerFocusNode.hasFocus) {
+                _readerScrollController.animateTo(
+                  _readerScrollController.offset - 200,
+                  duration: const Duration(milliseconds: 100),
+                  curve: Curves.easeIn,
+                );
+              }
+              return null;
+            },
+          ),
+          MovePopupLeftIntent: CallbackAction<MovePopupLeftIntent>(
+            onInvoke: (intent) {
+              if (_translationFocusNode.hasFocus) {
+                _offset.value = Offset(_offset.value.dx - 10, _offset.value.dy);
+              }
+              return null;
+            },
+          ),
+          MovePopupRightIntent: CallbackAction<MovePopupRightIntent>(
+            onInvoke: (intent) {
+              if (_translationFocusNode.hasFocus) {
+                _offset.value = Offset(_offset.value.dx + 10, _offset.value.dy);
+              }
+              return null;
+            },
+          ),
+          MovePopupUpIntent: CallbackAction<MovePopupUpIntent>(
+            onInvoke: (intent) {
+              if (_translationFocusNode.hasFocus) {
+                _offset.value = Offset(_offset.value.dx, _offset.value.dy - 10);
+              }
+              return null;
+            },
+          ),
+          // In the Actions widget in reader.dart, update the handlers:
+        UndoInPlaceTranslationIntent: CallbackAction<UndoInPlaceTranslationIntent>(
+          onInvoke: (intent) {
+            final rc = context.read<ReaderViewController>();
+            rc.clearInPlaceTranslation();
+            return null;
+          },
+        ),
+        RedoInPlaceTranslationIntent: CallbackAction<RedoInPlaceTranslationIntent>(
+  onInvoke: (intent) {
+    final rc = context.read<ReaderViewController>();
+    // For redo, we need to re-translate the last section
+    if (rc.lastTranslatedPage != null && rc.lastTranslatedSection != null) {
+      _onInPlaceTranslation(rc.lastTranslatedSection!, context);
+    }
+    return null;
+  },
+),
+          MovePopupDownIntent: CallbackAction<MovePopupDownIntent>(
+            onInvoke: (intent) {
+              if (_translationFocusNode.hasFocus) {
+                _offset.value = Offset(_offset.value.dx, _offset.value.dy + 10);
+              }
+              return null;
+            },
+          ),
+        },
+        child: Focus(
+          focusNode: _readerFocusNode,
+          autofocus: true,
+          child: _getReader(context),
+        ),
+      ),
+    );
   }
 
   Widget _getReader(BuildContext context) {
@@ -149,6 +401,7 @@ class ReaderView extends StatelessWidget implements Searchable {
                         child: LayoutBuilder(
                           builder: (context, constraints) =>
                               SingleChildScrollView(
+                            controller: _readerScrollController, // Added this
                             padding: const EdgeInsets.only(bottom: 24),
                             child: ConstrainedBox(
                               constraints: BoxConstraints(
@@ -157,7 +410,8 @@ class ReaderView extends StatelessWidget implements Searchable {
                                 child: SizedBox(
                                   height:
                                       MediaQuery.of(context).size.height * 0.8,
-                                  child: bookViewMode == BookViewMode.horizontal
+                                  child: widget.bookViewMode ==
+                                          BookViewMode.horizontal
                                       ? VerticalBookView(
                                           onSearchedSelectedText: (text) =>
                                               _onSearchSelectedText(
@@ -166,6 +420,8 @@ class ReaderView extends StatelessWidget implements Searchable {
                                               _onShareSelectedText,
                                           onClickedWord: (word) =>
                                               _onClickedWord(word, context),
+                                          onMiddleClickedWord: (word) =>
+                                              _onMiddleClickedWord(word, context),
                                           onSearchedInCurrentBook: (text) =>
                                               _onClickedSearchInCurrent(
                                                   context, text),
@@ -187,6 +443,8 @@ class ReaderView extends StatelessWidget implements Searchable {
                                               _onShareSelectedText,
                                           onClickedWord: (word) =>
                                               _onClickedWord(word, context),
+                                          onMiddleClickedWord: (word) =>
+                                              _onMiddleClickedWord(word, context),
                                           onSearchedInCurrentBook: (text) =>
                                               _onClickedSearchInCurrent(
                                                   context, text),
@@ -223,121 +481,180 @@ class ReaderView extends StatelessWidget implements Searchable {
     );
   }
 
-  Widget _buildTranslationOverlay(BuildContext context) {
-    final themeNotifier = context.watch<ThemeChangeNotifier>();
-    final borderColor =
-        themeNotifier.themeData.colorScheme.inverseSurface.getShadeColor();
-    final mediumTheme = themeNotifier.themeData.colorScheme.surfaceVariant;
-    final backgroundColor = switch (Prefs.selectedPageTheme) {
-      PageTheme.light => Colors.white,
-      PageTheme.medium => mediumTheme,
-      PageTheme.dark => Colors.black,
-    };
+Widget _buildTranslationOverlay(BuildContext context) {
+  final themeNotifier = context.watch<ThemeChangeNotifier>();
+  final borderColor =
+      themeNotifier.themeData.colorScheme.inverseSurface.getShadeColor();
+  final mediumTheme = themeNotifier.themeData.colorScheme.surfaceVariant;
+  final backgroundColor = switch (Prefs.selectedPageTheme) {
+    PageTheme.light => Colors.white,
+    PageTheme.medium => mediumTheme,
+    PageTheme.dark => Colors.black,
+  };
 
-    return ValueListenableBuilder<String?>(
-      valueListenable: context.read<ReaderViewController>().aiTranslationHtml,
-      builder: (context, html, _) {
-        final showTranslation = html != null && html.isNotEmpty;
+  return ValueListenableBuilder<String?>(
+    valueListenable: context.read<ReaderViewController>().aiTranslationHtml,
+    builder: (context, html, _) {
+      final showTranslation = html != null && html.isNotEmpty;
+      if (!showTranslation) {
+        return const SizedBox.shrink();
+      }
 
-        return AnimatedPositioned(
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOutCubic,
-          top: showTranslation ? 80 : -400,
-          left: 12,
-          right: 12,
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 300),
-            opacity: showTranslation ? 1.0 : 0.0,
-            child: Material(
-              elevation: 12,
-              shadowColor: Colors.black.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.6,
-                ),
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  border: Border.all(color: borderColor),
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      backgroundColor,
-                      backgroundColor.withOpacity(0.95),
-                    ],
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header with drag handle
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-
-                    // Content
-                    Flexible(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.auto_awesome,
-                                  size: 20,
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  AppLocalizations.of(context)!.aiContext,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                ),
-                                const Spacer(),
-                                IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () => context
-                                      .read<ReaderViewController>()
-                                      .aiTranslationHtml
-                                      .value = null,
-                                  tooltip: AppLocalizations.of(context)!.hide,
-                                ),
+      return ValueListenableBuilder<Offset>(
+        valueListenable: _offset,
+        builder: (context, offset, _) {
+          return Positioned(
+            key: _translationBubbleKey,
+            left: offset.dx,
+            top: offset.dy,
+            child: Focus(
+              focusNode: _translationFocusNode,
+              child: ValueListenableBuilder<Size>(
+                valueListenable: _size,
+                builder: (context, size, _) {
+                  return Stack(
+                    children: [
+                      Material(
+                        elevation: 12,
+                        shadowColor: Colors.black.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          width: size.width,
+                          height: size.height,
+                          decoration: BoxDecoration(
+                            color: backgroundColor,
+                            border: Border.all(color: borderColor),
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                backgroundColor,
+                                backgroundColor.withOpacity(0.95),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            InteractiveHtmlText(
-                              html: html ?? '',
-                              onWordTap: (word) =>
-                                  _onClickedWord(word, context),
-                            ),
-                          ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Header with drag handle
+                              GestureDetector(
+                                onPanUpdate: (details) {
+                                  _offset.value = Offset(
+                                    _offset.value.dx + details.delta.dx,
+                                    _offset.value.dy + details.delta.dy,
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  child: Container(
+                                    width: 40,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(0.5),
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Content
+                              Flexible(
+                                child: SingleChildScrollView(
+                                  controller: _translationScrollController,
+                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.auto_awesome,
+                                            size: 20,
+                                            color: Theme.of(context).primaryColor,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            AppLocalizations.of(context)!.aiContext,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 24, // Reduced from default
+                                              color: Theme.of(context).primaryColor,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          IconButton(
+                                            icon: const Icon(Icons.close),
+                                            onPressed: () {
+                                              final rc =
+                                                  context.read<ReaderViewController>();
+                                              _lastTranslation =
+                                                  rc.aiTranslationHtml.value;
+                                              rc.aiTranslationHtml.value = null;
+                                              _readerFocusNode.requestFocus();
+                                            },
+                                            tooltip:
+                                                AppLocalizations.of(context)!.hide,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      InteractiveHtmlText(
+  html: html ?? '',
+  onWordTap: (word) => _onClickedWord(word, context),
+  // Add reduced font size for translation content
+  textStyle: TextStyle(
+    fontSize: 24, // Reduced font size
+    color: Theme.of(context).textTheme.bodyMedium?.color,
+  ),
+),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      // Resize handle
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: GestureDetector(
+                          onPanUpdate: (details) {
+                            _size.value = Size(
+                              _size.value.width + details.delta.dx,
+                              _size.value.height + details.delta.dy,
+                            );
+                          },
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor.withOpacity(0.5),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(8),
+                                bottomRight: Radius.circular(16),
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.drag_indicator,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
+          );
+        },
+      );
+    },
+  );
+}
 
   Widget _buildTranslationLoadingOverlay(BuildContext context) {
     return ValueListenableBuilder<bool>(
@@ -438,6 +755,12 @@ class ReaderView extends StatelessWidget implements Searchable {
   }
 
   Future<void> _onClickedWord(String word, BuildContext context) async {
+    // Only show dictionary on middle click, not left click
+    // Left click functionality removed for dictionary
+    return;
+  }
+
+  Future<void> _onMiddleClickedWord(String word, BuildContext context) async {
     // removing punctuations etc.
     // convert to roman if display script is not roman
     word = PaliScript.getRomanScriptFrom(
@@ -533,59 +856,117 @@ class ReaderView extends StatelessWidget implements Searchable {
         );
   }
 
-  Future<void> _onAiContextRightClick(String text, BuildContext context) async {
-    if (text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('No text selected for translation.'),
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      return;
-    }
-
-    context.read<ReaderViewController>().isTranslating.value = true;
-    try {
-      // Trim and check for 1000-character limit
-      String truncatedText = text.trim();
-      String truncationNote = '';
-
-      if (truncatedText.length > 1000) {
-        truncatedText = truncatedText.substring(0, 1000);
-        truncationNote = '''
-<div style="color: orange; font-style: italic; margin-bottom: 8px;"> 
-Note: Only the first 1000 characters were sent for translation. 
-</div> // 
-''';
-      }
-
-      final Map<String, dynamic> result = Prefs.useGeminiDirect
-          ? await _translateWithGemini(truncatedText)
-          : await _translateWithOpenRouter(context, truncatedText);
-
-      final htmlOutput = result['text'] ?? '';
-      final finishReason = result['finishReason'];
-
-      final warning = '''
-<div style="color: red; font-weight: bold; margin-bottom: 12px;">
-⚠️  AI Generated. Accuracy is not guaranteed.
-</div>
-''';
-
-      final fullHtml = '$warning$truncationNote$htmlOutput';
-
-      if (context.mounted) {
-        context.read<ReaderViewController>().aiTranslationHtml.value = fullHtml;
-      }
-    } finally {
-      if (context.mounted) {
-        context.read<ReaderViewController>().isTranslating.value = false;
-      }
-    }
+Future<void> _onAiContextRightClick(String text, BuildContext context,
+    {bool? useDharmamitraSimple}) async {
+  if (text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('No text selected for translation.'),
+        behavior: SnackBarBehavior.floating,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+    return;
   }
 
+  context.read<ReaderViewController>().isTranslating.value = true;
+  try {
+    // Trim and check for 1000-character limit
+    String truncatedText = text.trim();
+    String truncationNote = '';
+
+    final Map<String, dynamic> result = useDharmamitraSimple != null
+        ? (useDharmamitraSimple
+            ? await _translateWithDharmamitraSimple(truncatedText)
+            : await _translateWithDharmamitra(truncatedText))
+        : (Prefs.useGeminiDirect
+            ? await _translateWithDharmamitra(truncatedText)
+            : await _translateWithDharmamitraSimple(truncatedText));
+
+    final htmlOutput = result['text'] ?? '';
+    final finishReason = result['finishReason'];
+
+    // REMOVE THE WARNING BANNER
+    final fullHtml = '$truncationNote$htmlOutput';
+
+    if (context.mounted) {
+      context.read<ReaderViewController>().aiTranslationHtml.value = fullHtml;
+    }
+  } finally {
+    if (context.mounted) {
+      context.read<ReaderViewController>().isTranslating.value = false;
+    }
+  }
+}
+
+
+// Add this method in the _ReaderViewState class, after the existing _onAiContextRightClick method:
+Future<void> _onAiContextRightClickHindi(String text, BuildContext context) async {
+  if (text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('No text selected for translation.'),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+    return;
+  }
+
+  context.read<ReaderViewController>().isTranslating.value = true;
+  try {
+    final Map<String, dynamic> result = await _translateWithDharmamitraHindi(text.trim());
+    final htmlOutput = result['text'] ?? '';
+    final finishReason = result['finishReason'];
+
+    final fullHtml = htmlOutput;
+
+    if (context.mounted) {
+      context.read<ReaderViewController>().aiTranslationHtml.value = fullHtml;
+    }
+  } finally {
+    if (context.mounted) {
+      context.read<ReaderViewController>().isTranslating.value = false;
+    }
+  }
+}
+
+Future<void> _onInPlaceTranslation(String text, BuildContext context) async {
+  if (text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('No text selected for translation.'),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+    return;
+  }
+
+  final rc = context.read<ReaderViewController>();
+  final currentPage = rc.currentPage.value;
+
+  context.read<ReaderViewController>().isTranslating.value = true;
+  try {
+    final Map<String, dynamic> result = await _translateWithDharmamitraSimple(text.trim());
+    final htmlOutput = result['text'] ?? '';
+
+    // Wrap the translation in a div with smaller font size for in-place translations
+    final fullHtml = '<div style="font-size: 24px;">$htmlOutput</div>';
+
+    if (context.mounted) {
+      // Store the translation for this specific page and text
+      rc.setInPlaceTranslation(fullHtml, currentPage, text);
+    }
+  } finally {
+    if (context.mounted) {
+      context.read<ReaderViewController>().isTranslating.value = false;
+    }
+  }
+}
+
+// REMOVE the _replaceSelectedTextWithTranslation function since we're not using it
   Future<Map<String, dynamic>> _translateWithOpenRouter(
       BuildContext context, String inputText) async {
     final String apiKey = Prefs.openRouterApiKey;
@@ -713,7 +1094,219 @@ Note: Only the first 1000 characters were sent for translation.
       };
     }
   }
+
+  Future<Map<String, dynamic>> _translateWithDharmamitra(
+      String inputText) async {
+    final Map<String, dynamic> jsonDataExplain = {
+      'id':
+          '{"input_sentence":"$inputText","input_encoding":"auto","target_lang":"english-explained","do_grammar_explanation":false,"model":"default"}',
+      'messages': [
+        {
+          'role': 'user',
+          'content': '',
+          'parts': [
+            {
+              'type': 'text',
+              'text': '',
+            },
+          ],
+        },
+      ],
+      'input_sentence': inputText,
+      'input_encoding': 'auto',
+      'target_lang': 'english-explained',
+      'do_grammar_explanation': false,
+      'model': 'default',
+    };
+
+    // Define the headers.
+    final Map<String, String> headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // The URL for the POST request.
+    final Uri url =
+        Uri.parse('https://dharmamitra.org/next/api/mitra-translation-stream');
+
+    try {
+      // Make the POST request.
+      final http.Response responseExplain = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode(jsonDataExplain),
+      );
+
+      // Check the status code and handle the response.
+      if (responseExplain.statusCode == 200) {
+        print('Success!');
+        print('Response body: ${responseExplain.body}');
+        final String htmlText = md.markdownToHtml(responseExplain.body);
+
+        return {
+          'text': htmlText,
+          'finishReason': 'success',
+        };
+      } else {
+        print('Request failed with status: ${responseExplain.statusCode}');
+        print('Response body: ${responseExplain.body}');
+        final errorMessage = responseExplain.body;
+        return {
+          'text':
+              '<div style="color: red; font-weight: bold;">$errorMessage</div>',
+          'finishReason': 'error',
+        };
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+      return {
+        'text':
+            '<div style="color: red; font-weight: bold;">Gemini exception: $e</div>',
+        'finishReason': 'exception',
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> _translateWithDharmamitraSimple(
+      String inputText) async {
+    final Map<String, dynamic> jsonDataExplain = {
+      'id':
+          '{"input_sentence":"$inputText","input_encoding":"auto","target_lang":"english","do_grammar_explanation":false,"model":"default"}',
+      'messages': [
+        {
+          'role': 'user',
+          'content': inputText,
+          'parts': [
+            {'type': 'text', 'text': inputText}
+          ]
+        },
+      ],
+      'input_sentence': inputText,
+      'input_encoding': 'auto',
+      'target_lang': 'english',
+      'do_grammar_explanation': false,
+      'model': 'default',
+    };
+
+    // Define the headers.
+    final Map<String, String> headers = {
+      'Content-Type': 'application/json',
+    };
+
+    // The URL for the POST request.
+    final Uri url =
+        Uri.parse('https://dharmamitra.org/next/api/mitra-translation-stream');
+
+    try {
+      // Make the POST request.
+      final http.Response responseExplain = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode(jsonDataExplain),
+      );
+
+      // Check the status code and handle the response.
+      if (responseExplain.statusCode == 200) {
+        print('Success!');
+        print('Response body: ${responseExplain.body}');
+        final String htmlText = md.markdownToHtml(responseExplain.body);
+
+        return {
+          'text': htmlText,
+          'finishReason': 'success',
+        };
+      } else {
+        print('Request failed with status: ${responseExplain.statusCode}');
+        print('Response body: ${responseExplain.body}');
+        final errorMessage = responseExplain.body;
+        return {
+          'text':
+              '<div style="color: red; font-weight: bold;">$errorMessage</div>',
+          'finishReason': 'error',
+        };
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+      return {
+        'text':
+            '<div style="color: red; font-weight: bold;">Gemini exception: $e</div>',
+        'finishReason': 'exception',
+      };
+    }
+  }
+  
+  // Add this translation method (after the existing _translateWithDharmamitraSimple method):
+Future<Map<String, dynamic>> _translateWithDharmamitraHindi(String inputText) async {
+  final Map<String, dynamic> jsonDataExplain = {
+    'id':
+        '{"input_sentence":"$inputText","input_encoding":"auto","target_lang":"hindi","do_grammar_explanation":false,"model":"default"}',
+    'messages': [
+      {
+        'role': 'user',
+        'content': inputText,
+        'parts': [
+          {'type': 'text', 'text': inputText}
+        ]
+      },
+    ],
+    'input_sentence': inputText,
+    'input_encoding': 'auto',
+    'target_lang': 'hindi', // Changed from 'english' to 'hindi'
+    'do_grammar_explanation': false,
+    'model': 'default',
+  };
+
+  // Define the headers.
+  final Map<String, String> headers = {
+    'Content-Type': 'application/json',
+  };
+
+  // The URL for the POST request.
+  final Uri url =
+      Uri.parse('https://dharmamitra.org/next/api/mitra-translation-stream');
+
+  try {
+    // Make the POST request.
+    final http.Response responseExplain = await http.post(
+      url,
+      headers: headers,
+      body: jsonEncode(jsonDataExplain),
+    );
+
+    // Check the status code and handle the response.
+    if (responseExplain.statusCode == 200) {
+      print('Success!');
+      print('Response body: ${responseExplain.body}');
+      final String htmlText = md.markdownToHtml(responseExplain.body);
+
+      return {
+        'text': htmlText,
+        'finishReason': 'success',
+      };
+    } else {
+      print('Request failed with status: ${responseExplain.statusCode}');
+      print('Response body: ${responseExplain.body}');
+      final errorMessage = responseExplain.body;
+      return {
+        'text':
+            '<div style="color: red; font-weight: bold;">$errorMessage</div>',
+        'finishReason': 'error',
+      };
+    }
+  } catch (e) {
+    print('An error occurred: $e');
+    return {
+      'text':
+          '<div style="color: red; font-weight: bold;">Exception: $e</div>',
+      'finishReason': 'exception',
+    };
+  }
 }
+
+
+}
+
+
+
 
 abstract class Searchable {
   void onSearchRequested(BuildContext context);
@@ -721,6 +1314,64 @@ abstract class Searchable {
 
 class SearchIntent extends Intent {
   const SearchIntent();
+}
+
+class TranslateDharmamitraIntent extends Intent {
+  const TranslateDharmamitraIntent();
+}
+
+class TranslateDharmamitraSimpleIntent extends Intent {
+  const TranslateDharmamitraSimpleIntent();
+}
+
+class TranslateInPlaceIntent extends Intent {
+  const TranslateInPlaceIntent();
+}
+
+class ClosePopupIntent extends Intent {
+  const ClosePopupIntent();
+}
+
+class ReopenPopupIntent extends Intent {
+  const ReopenPopupIntent();
+}
+
+class ScrollUpIntent extends Intent {
+  const ScrollUpIntent();
+}
+
+class ScrollDownIntent extends Intent {
+  const ScrollDownIntent();
+}
+
+class MovePopupLeftIntent extends Intent {
+  const MovePopupLeftIntent();
+}
+
+class MovePopupRightIntent extends Intent {
+  const MovePopupRightIntent();
+}
+
+
+class MovePopupUpIntent extends Intent {
+  const MovePopupUpIntent();
+}
+
+class MovePopupDownIntent extends Intent {
+  const MovePopupDownIntent();
+}
+
+class TranslateDharmamitraHindiIntent extends Intent {
+  const TranslateDharmamitraHindiIntent();
+}
+
+// ADD THESE NEW INTENT CLASSES AFTER THE EXISTING ONES:
+class UndoInPlaceTranslationIntent extends Intent {
+  const UndoInPlaceTranslationIntent();
+}
+
+class RedoInPlaceTranslationIntent extends Intent {
+  const RedoInPlaceTranslationIntent();
 }
 
 class SearchAction extends Action<SearchIntent> {
